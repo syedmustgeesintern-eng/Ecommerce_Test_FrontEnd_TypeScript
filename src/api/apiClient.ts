@@ -86,6 +86,8 @@ class ApiClient {
     }
 
     private handleRequest(config: InternalAxiosRequestConfig) {
+            console.log("TOKEN:", this.token); // 👈 check this
+
         if (this?.token) {
             // Set token in the Authorization header
             config.headers.Authorization = `Bearer ${this.token}`;

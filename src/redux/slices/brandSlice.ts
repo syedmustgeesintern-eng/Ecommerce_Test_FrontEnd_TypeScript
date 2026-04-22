@@ -4,13 +4,12 @@ import { createSlice } from "@reduxjs/toolkit";
 import client from "@/api/apiClient";
 import { createAsyncThunkWrapper } from "@/redux/utils/createAsyncThunkWrapper";
 
-
-
 export interface BrandState {
   loading: boolean;
   error: string | null;
   success: boolean;
-  email: string | null; 
+  email: string | null;
+  brand: any | null;
 }
 
 export type RegisterBrandPayload = FormData;
@@ -20,40 +19,56 @@ export type VerifyOtpPayload = {
   otp: string;
 };
 
-
-
 const initialState: BrandState = {
   loading: false,
   error: null,
   success: false,
   email: null,
+  brand: null,
 };
 
-
-
-// Register Brand (FormData)
-export const registerBrand = createAsyncThunkWrapper<
+//update brand
+// 🔥 UPDATE BRAND
+export const updateBrand = createAsyncThunkWrapper<
   any,
-  RegisterBrandPayload
->("brand/register", async (formData) => {
-  const response = await client.post("/brand/register", formData, {
+  { id: string; data: FormData }
+>("brand/update", async ({ id, data }) => {
+  const response = await client.patch(`/brand/${id}`, data, {
     "Content-Type": "multipart/form-data",
   });
 
-  console.log("🚀 ~ response.data:", response.data)
   return response.data;
 });
 
+// Register Brand (FormData)
+export const registerBrand = createAsyncThunkWrapper<any, RegisterBrandPayload>(
+  "brand/register",
+  async (formData) => {
+    const response = await client.post("/brand/register", formData, {
+      "Content-Type": "multipart/form-data",
+    });
+    const { data, status } = response || {};
+    console.log("🚀 ~ response.data:", response);
+    return { data, status };
+  },
+);
 
-export const verifyBrandOtp = createAsyncThunkWrapper<
-  any,
-  VerifyOtpPayload
->("brand/verify-otp", async (payload) => {
-  const response = await client.post("/brand/verify-otp", payload);
-  return response.data;
-});
-
-
+export const verifyBrandOtp = createAsyncThunkWrapper<any, VerifyOtpPayload>(
+  "brand/verify-otp",
+  async (payload) => {
+    const response = await client.post("/auth/verify-otp", payload);
+    const { data, status } = response;
+    return { data, status };
+  },
+);
+//brand info
+export const getBrandMe = createAsyncThunkWrapper<any, void>(
+  "brand/getMe",
+  async () => {
+    const response = await client.get("/brand/me");
+    return response.data;
+  },
+);
 
 const brandSlice = createSlice({
   name: "brand",
@@ -83,9 +98,10 @@ const brandSlice = createSlice({
       .addCase(registerBrand.rejected, (state, action: any) => {
         state.loading = false;
         state.error =
-          action?.meta?.errorMessage || action?.error?.message || "Registration failed";
+          action?.meta?.errorMessage ||
+          action?.error?.message ||
+          "Registration failed";
       })
-
 
       // ================= VERIFY OTP =================
       .addCase(verifyBrandOtp.pending, (state) => {
@@ -101,11 +117,45 @@ const brandSlice = createSlice({
       .addCase(verifyBrandOtp.rejected, (state, action: any) => {
         state.loading = false;
         state.error =
-          action?.meta?.errorMessage || action?.error?.message || "OTP verification failed";
+          action?.meta?.errorMessage ||
+          action?.error?.message ||
+          "OTP verification failed";
+      })
+      // 🔥 GET BRAND
+      .addCase(getBrandMe.pending, (state) => {
+        state.loading = true;
+      })
+
+      .addCase(getBrandMe.fulfilled, (state, action) => {
+        state.loading = false;
+        state.brand = action.payload;
+      })
+
+      .addCase(getBrandMe.rejected, (state) => {
+        state.loading = false;
+      })
+      .addCase(updateBrand.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+
+      .addCase(updateBrand.fulfilled, (state, action) => {
+        state.loading = false;
+        state.success = true;
+
+        // ✅ update brand in store
+        state.brand = action.payload;
+      })
+
+      .addCase(updateBrand.rejected, (state, action: any) => {
+        state.loading = false;
+        state.error =
+          action?.meta?.errorMessage ||
+          action?.error?.message ||
+          "Update failed";
       });
   },
 });
-
 
 // ================= EXPORTS =================
 

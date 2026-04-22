@@ -2,13 +2,22 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
 export default function LandingPage() {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-white">
       {/* Navbar */}
       <header className="flex justify-between items-center px-8 py-4 border-b">
-        <h1 className="text-xl font-bold">BrandHub</h1>
-        <Button variant="outline">Login</Button>
+        <h1
+          className="text-xl font-bold cursor-pointer"
+          onClick={() => navigate("/")}
+        >
+          BrandHub
+        </h1>
+
+        <Button variant="outline" onClick={() => navigate("/sign-in")}>
+          Login
+        </Button>
       </header>
 
       {/* Hero Section */}
@@ -23,8 +32,17 @@ export default function LandingPage() {
         </p>
 
         <div className="flex gap-4">
-          <Button size="lg">Get Started</Button>
-          <Button variant="outline" size="lg">
+          {/* ✅ Go to signup */}
+          <Button size="lg" onClick={() => navigate("/brand/signup")}>
+            Get Started
+          </Button>
+
+          {/* Optional */}
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => navigate("/about")}
+          >
             Learn More
           </Button>
         </div>
@@ -56,10 +74,11 @@ export default function LandingPage() {
 
       {/* CTA */}
       <section className="text-center py-20 bg-gray-100">
-        <h2 className="text-3xl font-bold mb-4">
-          Ready to launch your brand?
-        </h2>
-        <Button size="lg" onClick={() => navigate("/brand/signup")}>Sign Up as Brand</Button>
+        <h2 className="text-3xl font-bold mb-4">Ready to launch your brand?</h2>
+
+        <Button size="lg" onClick={() => navigate("/brand/signup")}>
+          Sign Up as Brand
+        </Button>
       </section>
     </div>
   );

@@ -1,4 +1,3 @@
-
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import client from "@/api/apiClient";
 
@@ -8,14 +7,13 @@ import type { NavigateFunction } from "react-router-dom";
 import { setLocalStorage } from "@/lib/helpers";
 import { createAsyncThunkWrapper } from "../utils/createAsyncThunkWrapper";
 
-
-
 export interface AuthState {
   accessToken: string | null;
   refreshToken: string | null;
   expiresIn: number | null;
   loading: boolean;
   error: string | null;
+  user: any | null;
 }
 
 export type LoginPayload = {
@@ -24,12 +22,11 @@ export type LoginPayload = {
 };
 
 export type AuthTokensPayload = {
+  message: string;
   accessToken: string;
   refreshToken: string;
   expiresIn?: number | null;
 };
-
-
 
 const initialState: AuthState = {
   accessToken: null,
@@ -37,29 +34,34 @@ const initialState: AuthState = {
   expiresIn: null,
   loading: false,
   error: null,
+  user: null,
 };
 
-
-
 // LOGIN
-export const login = createAsyncThunkWrapper<
-  AuthTokensPayload,
-  LoginPayload
->("auth/login", async (payload) => {
-  const response: AxiosResponse<AuthTokensPayload> = await client.post(
-    "/auth/login",
-    payload
-  );
+export const login = createAsyncThunkWrapper<AuthTokensPayload, LoginPayload>(
+  "auth/login",
+  async (payload) => {
+    const response: AxiosResponse<AuthTokensPayload> = await client.post(
+      "/auth/login",
+      payload,
+    );
 
-  const { accessToken, refreshToken } = response.data;
+    const { accessToken, refreshToken } = response.data;
 
-  setLocalStorage("token", response.data);
-  client.setToken(accessToken, refreshToken);
+    setLocalStorage("token", response.data);
+    client.setToken(accessToken, refreshToken);
 
-  return response.data; // ✅ IMPORTANT
-});
-
-
+    return response.data; // ✅ IMPORTANT
+  },
+);
+//get user infoo
+export const getMe = createAsyncThunkWrapper<any, void>(
+  "auth/getMe",
+  async () => {
+    const response = await client.get("/user/me");
+    return response.data;
+  },
+);
 // 🔥 LOGOUT
 export const logout =
   (navigate?: NavigateFunction, hideToast?: boolean) =>
@@ -77,8 +79,6 @@ export const logout =
       navigate?.("/sign-in");
     }
   };
-
-
 
 const authSlice = createSlice({
   name: "auth",
@@ -119,11 +119,24 @@ const authSlice = createSlice({
 
         // ⚠️ because your wrapper uses rejectWithValue in a non-standard way
         state.error =
-          action?.meta?.errorMessage || action?.error?.message || "Login failed";
+          action?.meta?.errorMessage ||
+          action?.error?.message ||
+          "Login failed";
+      })
+      .addCase(getMe.pending, (state) => {
+        state.loading = true;
+      })
+
+      .addCase(getMe.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload; // ✅ store user
+      })
+
+      .addCase(getMe.rejected, (state) => {
+        state.loading = false;
       });
   },
 });
-
 
 // ================= EXPORTS =================
 
