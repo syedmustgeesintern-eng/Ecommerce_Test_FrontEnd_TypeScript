@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import AppRoutes from "./routes/AppRoutes";
 import { initAuth } from "./lib/helpers";
-import { useAppDispatch } from "./redux/hooks";
+import { useAppDispatch } from "./store/hooks";
 
 function App() {
   const dispatch = useAppDispatch();

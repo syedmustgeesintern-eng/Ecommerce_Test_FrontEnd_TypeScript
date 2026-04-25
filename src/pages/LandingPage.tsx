@@ -33,9 +33,19 @@ export default function LandingPage() {
 
         <div className="flex gap-4">
           {/* ✅ Go to signup */}
-          <Button size="lg" onClick={() => navigate("/brand/signup")}>
-            Get Started
-          </Button>
+       <div className="flex gap-4">
+  <Button size="lg" onClick={() => navigate("/brand/signup")}>
+    Sign Up as Brand
+  </Button>
+
+  <Button
+    size="lg"
+    variant="secondary"
+    onClick={() => navigate("/customer/signup")}
+  >
+    Sign Up as Customer
+  </Button>
+</div>
 
           {/* Optional */}
           <Button

@@ -3,11 +3,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { registerBrand, setBrandEmail } from "@/redux/slices/brandSlice";
-import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { notify } from "@/components/ui/notify";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { brandSignupSchema } from "@/validation/brandSchema";
+import { registerBrand } from "@/store/features/brand";
+import { setOtpData } from "@/store/features/auth";
 
 export default function BrandSignup() {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ export default function BrandSignup() {
   const dispatch = useAppDispatch();
   const { loading } = useAppSelector((state) => state.brand);
   const onSubmit = async (data: any) => {
+    if (loading) return;
     const formData = new FormData();
 
     formData.append("name", data.name);
@@ -32,13 +34,12 @@ export default function BrandSignup() {
     try {
       const res = await dispatch(registerBrand(formData)).unwrap();
       console.log("🚀 ~ onSubmit ~ res:", res);
-      if (res?.status == 201) {
         console.log("coming here");
-        dispatch(setBrandEmail(data.email));
+        dispatch(setOtpData({ email: data.email, type: "brand" }));
         notify(res?.data?.message || "Registered successfully", "success");
 
         navigate("/brand/verify-otp");
-      }
+      
     } catch (error: any) {
       console.error("Registration failed:", error);
 
@@ -74,7 +75,7 @@ export default function BrandSignup() {
                 {errors.phone.message}
               </p>
             )}
-            <Button type="submit" className="w-full">
+            <Button type="submit" disabled={loading} className="w-full">
               {loading ? "Registering..." : "Register"}
             </Button>
           </form>

@@ -1,5 +1,5 @@
 import client from "@/api/apiClient";
-import { updateAuthInfo } from "@/redux/slices/authSlice";
+import { updateAuthInfo } from "@/store/features/auth/auth.slice";
 export const setLocalStorage = (key: string, value: any) => {
   if (!key) {
     return;

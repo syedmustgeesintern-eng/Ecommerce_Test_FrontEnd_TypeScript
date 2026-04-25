@@ -1,11 +1,13 @@
-import type { AppDispatch } from '../redux/store';
+import type { AppDispatch } from '../store/index.ts';
 import axios, { type AxiosInstance, type AxiosResponse, AxiosError, type AxiosRequestConfig, type InternalAxiosRequestConfig } from 'axios';
 import { baseURL } from '../config/apiConfig.ts';
 // import { logout, updateAuthInfo, AuthTokensPayload } from '../redux/slices/authSlice.ts';
-import { logout, updateAuthInfo, type AuthTokensPayload } from '@/redux/slices/authSlice.ts';
 import { setLocalStorage } from '@/lib/helpers.ts';
 import type { NavigateFunction } from 'react-router-dom';
 import { notify } from '@/components/ui/notify.tsx';
+import { updateAuthInfo } from '@/store/features/auth/auth.slice.ts';
+import type { AuthTokensPayload } from '@/store/features/auth/auth.types.ts';
+import { logout } from '@/store/features/auth/auth.thunk.ts';
 
 
 interface ErrorConfig extends AxiosRequestConfig {
@@ -149,7 +151,7 @@ class ApiClient {
         if (!this.refreshPromise) {
             this.token = undefined;
             this.refreshPromise = this.client.post<{ accessToken: string; refreshToken: string }>(
-                `${baseURL}/auth/refresh-token`,
+                `${baseURL}/auth/refresh`,
                 { refreshToken: this.refreshToken }
             );
         }
