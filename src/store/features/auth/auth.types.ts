@@ -4,7 +4,6 @@ export interface AuthState {
   expiresIn: number | null;
   loading: boolean;
   error: string | null;
-  user: any | null;
   otp: {
     email: string | null;
     type: "brand" | "customer" | null;

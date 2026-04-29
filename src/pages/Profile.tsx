@@ -1,27 +1,28 @@
 // src/pages/Profile.tsx
 
-import { useEffect, useState } from "react";
-import { Input } from "@/components/ui/input";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { notify } from "@/components/ui/notify";
 import { getBrandMe, updateBrand } from "@/store/features/brand";
-import { changePassword, getMe, updateUser } from "@/store/features/auth";
+import { changePassword } from "@/store/features/auth";
 import { Spinner } from "@/components/ui/spinner";
-import FormField from "@/components/ui/formField";
+import FormField from "@/components/FormField";
+import { getMe, updateUser } from "@/store/features/user";
+import { changePasswordSchema } from "@/validation/schema/changePasswordSchema";
 
 export default function Profile() {
   const dispatch = useAppDispatch();
-  const { user } = useAppSelector((state: any) => state.auth);
+  const { user } = useAppSelector((state: any) => state.user);
   const { brand } = useAppSelector((state: any) => state.brand);
   const [brandLoading, setBrandLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [userLoading, setUserLoading] = useState(false);
   const [isBrandEditing, setIsBrandEditing] = useState(false);
-
-
+  const [passwordErrors, setPasswordErrors] = useState<any>({});
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-
+  const [isUserEditing, setIsUserEditing] = useState(false);
   //  USER FORM
   const [userForm, setUserForm] = useState({
     name: "",
@@ -44,14 +45,11 @@ export default function Profile() {
     newPassword: "",
     confirmPassword: "",
   });
-
-  useEffect(() => {
-  dispatch(getMe());
-
-  if (user?.role !== "CUSTOMER") {
+useEffect(() => {
+  if (user && user.role !== "CUSTOMER") {
     dispatch(getBrandMe());
   }
-}, [dispatch, user?.role]);
+}, [user]);
 
   //  SET USER
   useEffect(() => {
@@ -93,6 +91,11 @@ export default function Profile() {
       ...passwordForm,
       [e.target.name]: e.target.value,
     });
+  };
+  const handleImageClick = () => {
+    if (isBrandEditing) {
+      fileInputRef.current?.click();
+    }
   };
 
   const handleLogoChange = (e: any) => {
@@ -158,6 +161,8 @@ export default function Profile() {
 
       const res = await dispatch(updateUser({ name: userForm.name })).unwrap();
 
+      dispatch(getMe());
+
       notify(res?.message || "User updated successfully", "success");
     } catch (error: any) {
       notify(error?.message || "Update failed", "error");
@@ -167,17 +172,12 @@ export default function Profile() {
   };
   const handlePasswordSave = async () => {
     try {
-      if (!passwordForm.currentPassword || !passwordForm.newPassword) {
-        notify("All fields are required", "error");
-        return;
-      }
-
-      if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-        notify("Passwords do not match", "error");
-        return;
-      }
-
       setPasswordLoading(true);
+      setPasswordErrors({}); // clear previous errors
+
+      await changePasswordSchema.validate(passwordForm, {
+        abortEarly: false,
+      });
 
       const res = await dispatch(
         changePassword({
@@ -193,17 +193,27 @@ export default function Profile() {
         newPassword: "",
         confirmPassword: "",
       });
-
     } catch (error: any) {
-      notify(error?.message || "Password change failed", "error");
+      if (error.inner) {
+        const formattedErrors: Record<string, string> = {};
+
+        error.inner.forEach((err: any) => {
+          if (!formattedErrors[err.path]) {
+            formattedErrors[err.path] = err.message;
+          }
+        });
+
+        setPasswordErrors(formattedErrors);
+      } else {
+        notify(error.message || "Something went wrong", "error");
+      }
     } finally {
       setPasswordLoading(false);
     }
   };
-
   const isCustomer = user?.role === "CUSTOMER";
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen p-6">
       <div className="w-full bg-white shadow rounded-xl p-6 space-y-6">
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-bold">Profile</h2>
@@ -246,23 +256,31 @@ export default function Profile() {
                 <img
                   src={preview}
                   alt="brand logo"
-                  className="h-32 w-32 rounded-full object-cover border"
+                  onClick={handleImageClick}
+                  className={`h-32 w-32 rounded-full object-cover border ${
+                    isBrandEditing ? "cursor-pointer hover:opacity-80" : ""
+                  }`}
                 />
               ) : (
-                <div className="h-32 w-32 rounded-full border flex items-center justify-center bg-gray-200 text-gray-500">
+                <div
+                  onClick={handleImageClick}
+                  className={`h-32 w-32 rounded-full border flex items-center justify-center bg-gray-200 text-gray-500 ${
+                    isBrandEditing ? "cursor-pointer hover:bg-gray-300" : ""
+                  }`}
+                >
                   No Logo
                 </div>
               )}
 
-              {isBrandEditing && (
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleLogoChange}
-                />
-              )}
+              {/* Hidden file input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleLogoChange}
+                className="hidden"
+              />
             </div>
-
             {/* FIELDS */}
             <div className="space-y-4">
               <FormField
@@ -296,9 +314,45 @@ export default function Profile() {
         <div className="border-t border-gray-300 my-6" />
         {/* ================= PERSONAL INFO ================= */}
         <div className="space-y-4">
-          <h3 className="text-lg  text-left font-semibold">
-            Personal Information
-          </h3>
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg text-left font-semibold">
+              Personal Information
+            </h3>
+
+            <div className="flex gap-2">
+              {!isUserEditing ? (
+                <Button onClick={() => setIsUserEditing(true)}>Edit</Button>
+              ) : (
+                <>
+                  <Button onClick={handleUserSave} disabled={userLoading}>
+                    {userLoading ? (
+                      <>
+                        <Spinner className="mr-2" />
+                        Saving...
+                      </>
+                    ) : (
+                      "Save"
+                    )}
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsUserEditing(false);
+                      setUserForm({
+                        name: user?.name || "",
+                        email: user?.email || "",
+                        phone: user?.phone || "",
+                      });
+                    }}
+                    disabled={userLoading}
+                  >
+                    Cancel
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
 
           <div className="grid md:grid-cols-2 gap-4">
             <FormField
@@ -306,6 +360,7 @@ export default function Profile() {
               name="name"
               value={userForm.name}
               onChange={handleUserChange}
+              disabled={!isUserEditing}
             />
 
             {isCustomer && (
@@ -322,27 +377,15 @@ export default function Profile() {
                   name="phone"
                   value={userForm.phone}
                   onChange={handleUserChange}
+                  disabled={!isUserEditing}
                 />
               </>
             )}
           </div>
-
-          <div className="flex justify-end">
-            <Button onClick={handleUserSave} disabled={userLoading}>
-              {userLoading ? (
-                <>
-                  <Spinner className="mr-2" />
-                  Saving...
-                </>
-              ) : (
-                "Save Changes"
-              )}
-            </Button>
-          </div>
         </div>
 
         {/* ================= DIVIDER ================= */}
-       <div className="border-t border-gray-300 my-6" />
+        <div className="border-t border-gray-300 my-6" />
         {/* ================= CHANGE PASSWORD ================= */}
         <div className="space-y-4">
           <h3 className="text-lg  text-left font-semibold">Change Password</h3>
@@ -354,6 +397,7 @@ export default function Profile() {
               type="password"
               value={passwordForm.currentPassword}
               onChange={handlePasswordChange}
+              error={passwordErrors.currentPassword}
             />
 
             <FormField
@@ -362,6 +406,7 @@ export default function Profile() {
               type="password"
               value={passwordForm.newPassword}
               onChange={handlePasswordChange}
+              error={passwordErrors.newPassword}
             />
 
             <FormField
@@ -370,6 +415,7 @@ export default function Profile() {
               type="password"
               value={passwordForm.confirmPassword}
               onChange={handlePasswordChange}
+              error={passwordErrors.confirmPassword}
             />
           </div>
 

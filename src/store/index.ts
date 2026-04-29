@@ -3,10 +3,12 @@
 import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import authReducer from "./features/auth/auth.slice";
 import brandReducer from "./features/brand/brand.slice";
+import { userReducer } from "./features/user";
 
 const rootReducer = combineReducers({
   auth: authReducer,
   brand: brandReducer,
+  user:userReducer,
 });
 
 export const store = configureStore({

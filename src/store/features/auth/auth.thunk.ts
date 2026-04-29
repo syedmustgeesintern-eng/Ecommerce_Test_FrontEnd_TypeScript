@@ -26,14 +26,6 @@ export const login = createAsyncThunkWrapper<AuthTokensPayload, LoginPayload>(
   },
 );
 
-// GET USER
-export const getMe = createAsyncThunkWrapper<any, void>(
-  "auth/getMe",
-  async () => {
-    const response = await client.get("/user/me");
-    return response.data;
-  },
-);
 // 🔥 LOGOUT
 export const logout =
   (navigate?: NavigateFunction, hideToast?: boolean) =>
@@ -71,18 +63,6 @@ export const forgotPassword = createAsyncThunkWrapper<
   return res.data;
 });
 
-// // 2
-// export const verifyForgotOtp = createAsyncThunkWrapper<
-//   { message: string; token: string },
-//   { email: string; otp: string }
-// >("auth/verifyForgotOtp", async (payload) => {
-//   const res = await client.post<{
-//     message: string;
-//     token: string;
-//   }>("/auth/verify-forgot-otp", payload);
-
-//   return res.data; // ✅ now correctly typed
-// });
 
 // 3
 export const resetPassword = createAsyncThunkWrapper<
@@ -94,13 +74,6 @@ export const resetPassword = createAsyncThunkWrapper<
     payload,
   );
   return res.data;
-});
-export const updateUser = createAsyncThunkWrapper<
-  { message: string; data: any },
-  { name: string }
->("auth/updateUser", async (payload) => {
-  const response = await client.patch("/user/me", payload);
-  return response.data;
 });
 //register customer
 export const registerCustomer = createAsyncThunkWrapper<

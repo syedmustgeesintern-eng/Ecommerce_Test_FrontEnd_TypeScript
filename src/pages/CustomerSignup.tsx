@@ -1,25 +1,16 @@
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-
-
-
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { notify } from "@/components/ui/notify";
 import { Spinner } from "@/components/ui/spinner";
 
-import * as yup from "yup";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { registerCustomer, setOtpData } from "@/store/features/auth";
 import { Button } from "@/components/ui/button";
+import { customerSignupSchema } from "@/validation/schema/customerSignup";
 
-// ✅ Validation
-const schema = yup.object({
-  name: yup.string().required("Name is required"),
-  email: yup.string().email().required("Email is required"),
-  password: yup.string().min(6).required("Password is required"),
-});
 
 export default function CustomerSignup() {
   const navigate = useNavigate();
@@ -31,7 +22,7 @@ export default function CustomerSignup() {
     handleSubmit,
     formState: { errors },
   } = useForm({
-    resolver: yupResolver(schema),
+    resolver: yupResolver(customerSignupSchema),
   });
 
   const onSubmit = async (data: any) => {
@@ -69,6 +60,7 @@ dispatch(setOtpData({ email: data.email, type: "customer" }));
               type="password"
               placeholder="Password"
               {...register("password")}
+              className={errors.password ? "border-red-500" : ""}
             />
             {errors.password && (
               <p className="text-red-500 text-sm">

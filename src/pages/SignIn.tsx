@@ -7,8 +7,9 @@ import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { notify } from "@/components/ui/notify";
 import { signInSchema } from "@/validation/signInSchema";
-import { login } from "@/store/features/auth";
+import {  login } from "@/store/features/auth";
 import { Spinner } from "@/components/ui/spinner";
+import { getMe } from "@/store/features/user";
 export default function SignIn() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -26,8 +27,9 @@ export default function SignIn() {
   const onSubmit = async (data: any) => {
     try {
       const res = await dispatch(login(data)).unwrap();
+      await dispatch(getMe());
       notify(res?.message || "Login successful", "success");
-      navigate("/home");
+      navigate("/dashboard");
     } catch (error: any) {
       notify(error?.errorMessage || "Login failed", "error");
     }

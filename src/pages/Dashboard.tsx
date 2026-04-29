@@ -2,7 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
-export default function Home() {
+export default function Dashboard() {
   const navigate = useNavigate();
 
   return (

@@ -1,41 +1,46 @@
-// ResetPassword.tsx
-
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { notify } from "@/components/ui/notify";
 import { useAppDispatch } from "@/store/hooks";
 import { resetPassword } from "@/store/features/auth";
+import { Spinner } from "@/components/ui/spinner";
+
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { resetPasswordSchema } from "@/validation/resetPasswordSchema";
+import { useState } from "react";
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();
-  const token = searchParams.get("token"); // ✅ IMPORTANT
+  const token = searchParams.get("token");
 
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({
-    newPassword: "",
-    confirmPassword: "",
+  const [loading, setLoading] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: yupResolver(resetPasswordSchema),
   });
 
-  const handleSubmit = async () => {
+  const onSubmit = async (data: any) => {
     try {
       if (!token) {
         notify("Invalid or missing token", "error");
         return;
       }
 
-      if (form.newPassword !== form.confirmPassword) {
-        notify("Passwords do not match", "error");
-        return;
-      }
+      setLoading(true);
 
       const res = await dispatch(
         resetPassword({
           token,
-          newPassword: form.newPassword,
+          newPassword: data.newPassword,
         })
       ).unwrap();
 
@@ -44,6 +49,8 @@ export default function ResetPassword() {
       navigate("/sign-in");
     } catch (err: any) {
       notify(err?.errorMessage || "Reset failed", "error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -52,25 +59,44 @@ export default function ResetPassword() {
       <div className="w-full max-w-md bg-white p-6 rounded shadow space-y-4">
         <h2 className="text-xl font-bold">Reset Password</h2>
 
-        <Input
-          type="password"
-          placeholder="New Password"
-          onChange={(e) =>
-            setForm({ ...form, newPassword: e.target.value })
-          }
-        />
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+          {/* NEW PASSWORD */}
+          <Input
+            type="password"
+            placeholder="New Password"
+            {...register("newPassword")}
+            className={errors.newPassword ? "border-red-500" : ""}
+          />
+          {errors.newPassword && (
+            <p className="text-red-500 text-sm">
+              {errors.newPassword.message}
+            </p>
+          )}
 
-        <Input
-          type="password"
-          placeholder="Confirm Password"
-          onChange={(e) =>
-            setForm({ ...form, confirmPassword: e.target.value })
-          }
-        />
+          {/* CONFIRM PASSWORD */}
+          <Input
+            type="password"
+            placeholder="Confirm Password"
+            {...register("confirmPassword")}
+            className={errors.confirmPassword ? "border-red-500" : ""}
+          />
+          {errors.confirmPassword && (
+            <p className="text-red-500 text-sm">
+              {errors.confirmPassword.message}
+            </p>
+          )}
 
-        <Button onClick={handleSubmit} className="w-full">
-          Update Password
-        </Button>
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? (
+              <>
+                <Spinner className="mr-2" />
+                Updating...
+              </>
+            ) : (
+              "Update Password"
+            )}
+          </Button>
+        </form>
       </div>
     </div>
   );
