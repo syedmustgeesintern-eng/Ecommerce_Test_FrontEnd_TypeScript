@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { notify } from "@/components/ui/notify";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { brandSignupSchema } from "@/validation/brandSchema";
+import { brandSignupSchema } from "@/validation/schema/brandSchema";
 import { registerBrand } from "@/store/features/brand";
 import { setOtpData } from "@/store/features/auth";
 
@@ -34,12 +34,11 @@ export default function BrandSignup() {
     try {
       const res = await dispatch(registerBrand(formData)).unwrap();
       console.log("🚀 ~ onSubmit ~ res:", res);
-        console.log("coming here");
-        dispatch(setOtpData({ email: data.email, type: "brand" }));
-        notify(res?.data?.message || "Registered successfully", "success");
+      console.log("coming here");
+      dispatch(setOtpData({ email: data.email, type: "brand" }));
+      notify(res?.data?.message || "Registered successfully", "success");
 
-        navigate("/brand/verify-otp");
-      
+      navigate("/brand/verify-otp");
     } catch (error: any) {
       console.error("Registration failed:", error);
 

@@ -10,8 +10,7 @@ export default function Navbar() {
 
   return (
     <header className="bg-gray-200 rounded h-[100px] border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-        
+      <div className="max-w-7xl mx-auto h-[100px] px-6 py-4 flex content-center  justify-between items-center">
         {/* LOGO */}
         <h1
           className="text-l  font-bold cursor-pointer"
@@ -24,6 +23,27 @@ export default function Navbar() {
         <div className="flex gap-6">
           <button onClick={() => navigate("/dashboard")}>Dashboard</button>
           <button onClick={() => navigate("/profile")}>Profile</button>
+          {user?.role === "BRAND_OWNER" && (
+            <button
+              onClick={() => navigate("/products/create")}
+              className="hover:text-black transition"
+            >
+              Create Product
+            </button>
+          )}
+          {user?.role === "CUSTOMER" && (
+            <button
+              onClick={() => navigate("/products/allProducts")}
+              className="hover:text-black transition"
+            >
+              View All Products
+            </button>
+          )}
+          {user?.role === "BRAND_OWNER" && (
+  <button onClick={() => navigate("/my-products")}>
+    My Products
+  </button>
+)}
 
           {/* Role-based */}
           {user?.role === "BRAND_OWNER" && (
@@ -33,9 +53,7 @@ export default function Navbar() {
 
         {/* USER INFO */}
         <div className="flex items-center gap-4">
-          <span className="font-medium">
-            {user?.name || "User"}
-          </span>
+          <span className="font-medium">{user?.name || "User"}</span>
 
           <button
             onClick={() => dispatch(logout(navigate))}

@@ -8,7 +8,7 @@ import { Spinner } from "@/components/ui/spinner";
 
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { resetPasswordSchema } from "@/validation/resetPasswordSchema";
+import { resetPasswordSchema } from "@/validation/schema/resetPasswordSchema";
 import { useState } from "react";
 
 export default function ResetPassword() {
