@@ -48,7 +48,7 @@ export default function CreateProduct() {
   const location = useLocation();
   const isViewingExisting = Boolean(productId);
   const isEditRoute = location.pathname.includes("/products/edit/");
-  const navigate=useNavigate();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
@@ -56,7 +56,7 @@ export default function CreateProduct() {
   const [productSkuError, setProductSkuError] = useState("");
   const [variantSkuError, setVariantSkuError] = useState("");
   const [variantsTouched, setVariantsTouched] = useState(false);
-const [initialForm, setInitialForm] = useState<FormState | null>(null);
+  const [initialForm, setInitialForm] = useState<FormState | null>(null);
   const [form, setForm] = useState<FormState>(INITIAL_FORM_STATE);
 
   const [imageItems, setImageItems] = useState<ImageItem[]>([]);
@@ -127,12 +127,11 @@ const [initialForm, setInitialForm] = useState<FormState | null>(null);
 
     fetchProduct();
   }, [productId]);
- 
 
   const isDirty = useMemo(() => {
-  if (!initialForm) return false;
-  return !isEqual(form, initialForm);
-}, [form, initialForm]);
+    if (!initialForm) return false;
+    return !isEqual(form, initialForm);
+  }, [form, initialForm]);
   // ---------------- VARIANTS ----------------
 
   const addVariant = () => {
@@ -145,7 +144,9 @@ const [initialForm, setInitialForm] = useState<FormState | null>(null);
 
   const removeVariant = (localId: string) => {
     setVariantsTouched(true);
-    const updated = form.variants.filter((variant) => variant.localId !== localId);
+    const updated = form.variants.filter(
+      (variant) => variant.localId !== localId,
+    );
     setForm({ ...form, variants: updated });
   };
 
@@ -200,7 +201,6 @@ const [initialForm, setInitialForm] = useState<FormState | null>(null);
     setForm({ ...form, variants: updated });
   };
 
-
   const handleImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
 
@@ -233,7 +233,10 @@ const [initialForm, setInitialForm] = useState<FormState | null>(null);
         if (validation.message?.toLowerCase().includes("variant sku")) {
           setVariantSkuError(validation.message);
         }
-        notify(validation.message || "Please fix form errors and try again.", "error");
+        notify(
+          validation.message || "Please fix form errors and try again.",
+          "error",
+        );
         return;
       }
 
@@ -244,20 +247,29 @@ const [initialForm, setInitialForm] = useState<FormState | null>(null);
         formattedData.variants = [];
       }
 
-      const uploadFiles = imageItems.map((i) => i.file).filter(Boolean) as File[];
+      const uploadFiles = imageItems
+        .map((i) => i.file)
+        .filter(Boolean) as File[];
 
-      const res = isEditRoute && productId
-        ? await dispatch(
-            updateProduct({ productId, payload: formattedData, files: uploadFiles }),
-          ).unwrap()
-        : await dispatch(
-            createProduct({ payload: formattedData, files: uploadFiles }),
-          ).unwrap();
+      const res =
+        isEditRoute && productId
+          ? await dispatch(
+              updateProduct({
+                productId,
+                payload: formattedData,
+                files: uploadFiles,
+              }),
+            ).unwrap()
+          : await dispatch(
+              createProduct({ payload: formattedData, files: uploadFiles }),
+            ).unwrap();
 
       // ✅ SUCCESS NOTIFY
       notify(
         res?.message ||
-          (isEditRoute ? "Product updated successfully" : "Product created successfully 🚀"),
+          (isEditRoute
+            ? "Product updated successfully"
+            : "Product created successfully 🚀"),
         "success",
       );
 
@@ -328,7 +340,9 @@ const [initialForm, setInitialForm] = useState<FormState | null>(null);
   };
 
   const getSizeOptionsForValue = (value: string) => {
-    const hasExactOption = SIZE_OPTIONS.some((option) => option.value === value);
+    const hasExactOption = SIZE_OPTIONS.some(
+      (option) => option.value === value,
+    );
     if (!value || hasExactOption) {
       return SIZE_OPTIONS;
     }
@@ -338,23 +352,23 @@ const [initialForm, setInitialForm] = useState<FormState | null>(null);
   };
   return (
     <div className="max-w-5xl mx-auto bg-white p-6 rounded-xl shadow space-y-6">
-     <div className="flex justify-between items-center">
-  <h2 className="text-2xl font-bold">
-    {isViewingExisting
-      ? isEditRoute
-        ? "Edit Product"
-        : "Product Details"
-      : "Create Product"}
-  </h2>
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">
+          {isViewingExisting
+            ? isEditRoute
+              ? "Edit Product"
+              : "Product Details"
+            : "Create Product"}
+        </h2>
 
-  {/* 👇 Edit button only in VIEW mode */}
-  {isViewingExisting && !isEditRoute && (
-    <Button onClick={() => navigate(`/products/edit/${productId}`)}>
-      <Pencil className="w-4 h-4 mr-2" />
-      Edit
-    </Button>
-  )}
-</div>
+        {/* 👇 Edit button only in VIEW mode */}
+        {isViewingExisting && !isEditRoute && (
+          <Button onClick={() => navigate(`/products/edit/${productId}`)}>
+            <Pencil className="w-4 h-4 mr-2" />
+            Edit
+          </Button>
+        )}
+      </div>
 
       {productLoading && (
         <p className="text-sm text-gray-500">Loading product details...</p>
@@ -543,7 +557,11 @@ const [initialForm, setInitialForm] = useState<FormState | null>(null);
                     name={`variantSku-${vIndex}`}
                     value={variant.sku}
                     onChange={(e) =>
-                      handleVariantChange(variant.localId, "sku", e.target.value)
+                      handleVariantChange(
+                        variant.localId,
+                        "sku",
+                        e.target.value,
+                      )
                     }
                     disabled={isViewingExisting && !isEditRoute}
                     error={variantSkuError}
@@ -554,7 +572,11 @@ const [initialForm, setInitialForm] = useState<FormState | null>(null);
                     type="number"
                     value={variant.price}
                     onChange={(e) =>
-                      handleVariantChange(variant.localId, "price", e.target.value)
+                      handleVariantChange(
+                        variant.localId,
+                        "price",
+                        e.target.value,
+                      )
                     }
                     disabled={isViewingExisting && !isEditRoute}
                   />
@@ -564,7 +586,11 @@ const [initialForm, setInitialForm] = useState<FormState | null>(null);
                     type="number"
                     value={variant.stock}
                     onChange={(e) =>
-                      handleVariantChange(variant.localId, "stock", e.target.value)
+                      handleVariantChange(
+                        variant.localId,
+                        "stock",
+                        e.target.value,
+                      )
                     }
                     disabled={isViewingExisting && !isEditRoute}
                   />
@@ -583,8 +609,8 @@ const [initialForm, setInitialForm] = useState<FormState | null>(null);
 
                 {/* ATTRIBUTES */}
                 {variant.attributes.some(
-  (a) => a.attribute || a.value || a.meta?.hex
-) && (
+                  (a) => a.attribute || a.value || a.meta?.hex,
+                ) && (
                   <div>
                     <div className="flex justify-between items-center mb-2">
                       <h4 className="text-sm font-medium">Attributes</h4>
@@ -592,137 +618,147 @@ const [initialForm, setInitialForm] = useState<FormState | null>(null);
 
                     {variant.attributes.map((attr, aIndex) => (
                       <div key={aIndex} className="border rounded-md p-3 mb-3">
-                      {/* ✅ HEADER */}
-                      <div className="flex justify-between items-center mb-3 border-b pb-2">
-                        <p className="text-sm font-medium text-gray-600">
-                          Attribute {aIndex + 1}
-                        </p>
+                        {/* ✅ HEADER */}
+                        <div className="flex justify-between items-center mb-3 border-b pb-2">
+                          <p className="text-sm font-medium text-gray-600">
+                            Attribute {aIndex + 1}
+                          </p>
 
-                        <button
-                          onClick={() => removeAttribute(variant.localId, aIndex)}
-                          className="bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-full"
-                          disabled={isViewingExisting && !isEditRoute}
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </div>
+                          <button
+                            onClick={() =>
+                              removeAttribute(variant.localId, aIndex)
+                            }
+                            className="bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-full"
+                            disabled={isViewingExisting && !isEditRoute}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
 
-                      {/* ✅ CONTENT */}
-                      <div className="grid grid-cols-3 gap-3">
-                        {/* ATTRIBUTE TYPE */}
-                        <CustomSelect
-                          options={attributeOptions}
-                          value={attr.attribute}
-                          onChange={(val) =>
-                            handleAttributeChange(
-                              variant.localId,
-                              aIndex,
-                              "attribute",
-                              val,
-                            )
-                          }
-                          placeholder="Select Type"
-                          className={isViewingExisting && !isEditRoute ? "pointer-events-none opacity-60" : ""}
-                        />
-
-                        {/* ✅ SIZE */}
-                        {attr.attribute === "size" && (
+                        {/* ✅ CONTENT */}
+                        <div className="grid grid-cols-3 gap-3">
+                          {/* ATTRIBUTE TYPE */}
                           <CustomSelect
-                            options={getSizeOptionsForValue(attr.value)}
-                            value={attr.value}
+                            options={attributeOptions}
+                            value={attr.attribute}
                             onChange={(val) =>
                               handleAttributeChange(
                                 variant.localId,
                                 aIndex,
-                                "value",
+                                "attribute",
                                 val,
                               )
                             }
-                            placeholder="Select Size"
-                            className={isViewingExisting && !isEditRoute ? "pointer-events-none opacity-60" : ""}
+                            placeholder="Select Type"
+                            className={
+                              isViewingExisting && !isEditRoute
+                                ? "pointer-events-none opacity-60"
+                                : ""
+                            }
                           />
-                        )}
 
-                        {/* ✅ COLOR */}
-                        {attr.attribute === "color" && (
-                          <>
-                            {/* Color Name */}
-                            <FormField
-                              label="Color Name"
-                              name={`variant-${vIndex}-attribute-${aIndex}-colorName`}
+                          {/* ✅ SIZE */}
+                          {attr.attribute === "size" && (
+                            <CustomSelect
+                              options={getSizeOptionsForValue(attr.value)}
                               value={attr.value}
-                              onChange={(e) =>
+                              onChange={(val) =>
                                 handleAttributeChange(
                                   variant.localId,
                                   aIndex,
                                   "value",
-                                  e.target.value,
+                                  val,
                                 )
                               }
-                              disabled={isViewingExisting && !isEditRoute}
+                              placeholder="Select Size"
+                              className={
+                                isViewingExisting && !isEditRoute
+                                  ? "pointer-events-none opacity-60"
+                                  : ""
+                              }
                             />
+                          )}
 
-                            {/* Color Picker */}
-                            <div className="relative w-full  h-8">
-                              {/* Hidden input */}
-                              <input
-                                type="color"
-                                value={attr.meta?.hex || "#000000"}
-                                onChange={(e) => {
+                          {/* ✅ COLOR */}
+                          {attr.attribute === "color" && (
+                            <>
+                              {/* Color Name */}
+                              <FormField
+                                label="Color Name"
+                                name={`variant-${vIndex}-attribute-${aIndex}-colorName`}
+                                value={attr.value}
+                                onChange={(e) =>
                                   handleAttributeChange(
                                     variant.localId,
                                     aIndex,
-                                    "hex",
+                                    "value",
                                     e.target.value,
-                                  );
-                                }}
-                                className="absolute inset-0 w-full h-10 border opacity-0 cursor-pointer"
+                                  )
+                                }
                                 disabled={isViewingExisting && !isEditRoute}
                               />
 
-                              {/* Visible UI */}
-                              <div className="flex items-center justify-between w-full h-10 px-3 border rounded-md bg-white hover:border-gray-400 transition">
-                                <div className="flex items-center gap-2">
-                                  <div
-                                    className="w-5 h-5 rounded-full border"
-                                    style={{
-                                      backgroundColor:
-                                        attr.meta?.hex || "#000000",
-                                    }}
-                                  />
-                                  <span className="text-sm text-gray-700">
-                                    {attr.meta?.hex || "#000000"}
+                              {/* Color Picker */}
+                              <div className="relative w-full  h-8">
+                                {/* Hidden input */}
+                                <input
+                                  type="color"
+                                  value={attr.meta?.hex || "#000000"}
+                                  onChange={(e) => {
+                                    handleAttributeChange(
+                                      variant.localId,
+                                      aIndex,
+                                      "hex",
+                                      e.target.value,
+                                    );
+                                  }}
+                                  className="absolute inset-0 w-full h-10 border opacity-0 cursor-pointer"
+                                  disabled={isViewingExisting && !isEditRoute}
+                                />
+
+                                {/* Visible UI */}
+                                <div className="flex items-center justify-between w-full h-10 px-3 border rounded-md bg-white hover:border-gray-400 transition">
+                                  <div className="flex items-center gap-2">
+                                    <div
+                                      className="w-5 h-5 rounded-full border"
+                                      style={{
+                                        backgroundColor:
+                                          attr.meta?.hex || "#000000",
+                                      }}
+                                    />
+                                    <span className="text-sm text-gray-700">
+                                      {attr.meta?.hex || "#000000"}
+                                    </span>
+                                  </div>
+
+                                  <span className="text-xs text-gray-400">
+                                    Pick
                                   </span>
                                 </div>
-
-                                <span className="text-xs text-gray-400">
-                                  Pick
-                                </span>
                               </div>
-                            </div>
-                          </>
-                        )}
-
-                        {/* ✅ CUSTOM ATTRIBUTE (fallback) */}
-                        {attr.attribute &&
-                          attr.attribute !== "size" &&
-                          attr.attribute !== "color" && (
-                            <FormField
-                              label="Value"
-                              name={`variant-${vIndex}-attribute-${aIndex}-value`}
-                              value={attr.value}
-                              onChange={(e) =>
-                                handleAttributeChange(
-                                  variant.localId,
-                                  aIndex,
-                                  "value",
-                                  e.target.value,
-                                )
-                              }
-                              disabled={isViewingExisting && !isEditRoute}
-                            />
+                            </>
                           )}
-                      </div>
+
+                          {/* ✅ CUSTOM ATTRIBUTE (fallback) */}
+                          {attr.attribute &&
+                            attr.attribute !== "size" &&
+                            attr.attribute !== "color" && (
+                              <FormField
+                                label="Value"
+                                name={`variant-${vIndex}-attribute-${aIndex}-value`}
+                                value={attr.value}
+                                onChange={(e) =>
+                                  handleAttributeChange(
+                                    variant.localId,
+                                    aIndex,
+                                    "value",
+                                    e.target.value,
+                                  )
+                                }
+                                disabled={isViewingExisting && !isEditRoute}
+                              />
+                            )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -732,24 +768,27 @@ const [initialForm, setInitialForm] = useState<FormState | null>(null);
           </>
         )}
 
-       {(!isViewingExisting || isEditRoute) && (
-  <Button onClick={addVariant}>
-    + Add
-  </Button>
-)}
+        {(!isViewingExisting || isEditRoute) && (
+          <Button onClick={addVariant}>+ Add</Button>
+        )}
       </div>
 
       {/* SUBMIT */}
       <div className="flex justify-end">
         {(!isViewingExisting || isEditRoute) && (
-          <Button onClick={handleSubmit} disabled={loading || (!isDirty && isEditRoute)}>
+          <Button
+            onClick={handleSubmit}
+            disabled={loading || (!isDirty && isEditRoute)}
+          >
             {loading ? (
               <>
                 <Spinner className="mr-2" />
                 {isEditRoute ? "Updating..." : "Creating..."}
               </>
+            ) : isEditRoute ? (
+              "Update Product"
             ) : (
-              isEditRoute ? "Update Product" : "Submit"
+              "Submit"
             )}
           </Button>
         )}
