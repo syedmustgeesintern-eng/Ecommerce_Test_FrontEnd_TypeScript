@@ -1,10 +1,13 @@
-// src/routes/AppRoutes.tsx
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Suspense } from "react";
 import { publicRoutes } from "./publicRoutes";
 import { protectedRoutes } from "./protectedRoutes";
 import ProtectedRoute from "./ProtectedRoute";
-import MainLayout from "@/layouts/MainLayout";
+import { useAppSelector } from "@/store/hooks";
+import BrandLayout from "@/layouts/BrandLayout";
+import CustomerLayout from "@/layouts/CustomerLayout";
+
+// ✅ IMPORT LAYOUTS
 
 function Loader() {
   return (
@@ -14,22 +17,35 @@ function Loader() {
   );
 }
 
+// ✅ ROLE BASED LAYOUT SWITCH
+function RoleBasedLayout() {
+  const { user } = useAppSelector((state: any) => state.user);
+
+  if (!user) return null;
+
+  if (user.role === "BRAND_OWNER") {
+    return <BrandLayout />;
+  }
+
+  return <CustomerLayout />;
+}
+
 export default function AppRoutes() {
   return (
     <BrowserRouter>
       <Suspense fallback={<Loader />}>
         <Routes>
 
-          {/* PUBLIC */}
+          {/* PUBLIC ROUTES */}
           {publicRoutes.map((route) => (
             <Route key={route.path} path={route.path} element={route.element} />
           ))}
 
-          {/* PROTECTED WITH LAYOUT */}
+          {/* PROTECTED ROUTES */}
           <Route
             element={
               <ProtectedRoute>
-                <MainLayout />
+                <RoleBasedLayout />
               </ProtectedRoute>
             }
           >
@@ -37,7 +53,11 @@ export default function AppRoutes() {
               <Route
                 key={route.path}
                 path={route.path}
-                element={route.element}
+                element={
+                  <ProtectedRoute allowedRoles={route.roles}>
+                    {route.element}
+                  </ProtectedRoute>
+                }
               />
             ))}
           </Route>

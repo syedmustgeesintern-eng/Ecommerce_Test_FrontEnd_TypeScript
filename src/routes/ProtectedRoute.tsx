@@ -10,7 +10,7 @@ type Props = {
 export default function ProtectedRoute({ children, allowedRoles }: Props) {
   const { user, loading } = useAppSelector((state: any) => state.user);
 
-  // ⏳ Wait until user is fetched
+  // ⏳ Wait for user
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">

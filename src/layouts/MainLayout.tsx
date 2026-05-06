@@ -1,15 +1,31 @@
-// src/layouts/MainLayout.tsx
-import Navbar from "@/components/Navbar";
+// src/layouts/AppLayout.tsx
+
+import { useAppSelector } from "@/store/hooks";
 import { Outlet } from "react-router-dom";
 
-export default function MainLayout() {
-  return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <Navbar />
+import Navbar from "@/components/Navbar";
+import Sidebar from "./Sidebar";
 
-      <main className="flex-1 w-full max-w-7xl mx-auto p-6">
-        <Outlet />
-      </main>
+export default function AppLayout() {
+  const { user } = useAppSelector((state: any) => state.user);
+
+  if (!user) return null;
+
+  const isBrand = user.role === "BRAND_OWNER";
+
+  return (
+    <div className="min-h-screen flex bg-gray-100">
+      {/* ✅ BRAND → SIDEBAR */}
+      {isBrand && <Sidebar />}
+
+      <div className="flex-1 flex flex-col">
+        {/* ✅ CUSTOMER → NAVBAR */}
+        {!isBrand && <Navbar />}
+
+        <main className="flex-1 p-6">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }

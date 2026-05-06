@@ -18,8 +18,13 @@ interface Token {
     exp: number;
     id: string;
 }
+type QueuedRequest = {
+    originalRequest: ErrorConfig;
+    resolve: (value: AxiosResponse | PromiseLike<AxiosResponse>) => void;
+    reject: (reason?: unknown) => void;
+};
 
-const refreshTokenExceptions = new Set(['/login', '/auth/refresh-token']);
+const refreshTokenExceptions = new Set(['/login', '/auth/refresh']);
 
 export const parseJWT = (token: string) => {
     try {
@@ -58,6 +63,7 @@ class ApiClient {
     private navigate: NavigateFunction | undefined;
     private refreshPromise: Promise<AxiosResponse<{ accessToken: string; refreshToken: string }>> | null = null;
     private isLoggingOut: boolean = false;
+    private requestQueue: QueuedRequest[] = [];
 
     constructor(baseURL: string, headers?: Record<string, string>) {
         this.client = axios.create({
@@ -88,8 +94,6 @@ class ApiClient {
     }
 
     private handleRequest(config: InternalAxiosRequestConfig) {
-            console.log("TOKEN:", this.token); // 👈 check this
-
         if (this?.token) {
             // Set token in the Authorization header
             config.headers.Authorization = `Bearer ${this.token}`;
@@ -122,12 +126,31 @@ class ApiClient {
                 !refreshTokenExceptions.has(originalRequest.url || '')
             ) {
                 originalRequest._retry = true;
-                const res = await this.refreshAccessToken();
-                if (!res) {
-                    throw error;
+
+                if (this.refreshPromise) {
+                    return new Promise<AxiosResponse>((resolve, reject) => {
+                        this.requestQueue.push({ originalRequest, resolve, reject });
+                    });
                 }
-                this.client.defaults.headers.common['Authorization'] = `Bearer ${res.data.accessToken}`;
-                return this.client.request(originalRequest);
+
+                try {
+                    const res = await this.refreshAccessToken();
+                    if (!res) {
+                        throw error;
+                    }
+
+                    const accessToken = res.data.accessToken;
+                    this.client.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+                    this.flushRequestQueue(accessToken);
+                    originalRequest.headers = {
+                        ...originalRequest.headers,
+                        Authorization: `Bearer ${accessToken}`,
+                    };
+                    return this.client.request(originalRequest);
+                } catch (refreshError) {
+                    this.flushRequestQueue(undefined, refreshError);
+                    throw refreshError;
+                }
             }
             if (error?.response?.status === 423) {
                 console.log('🚀 ~ ApiClient ~ handleErrorResponse ~ error?.response?.status:', error?.response?.status);
@@ -147,11 +170,27 @@ class ApiClient {
         throw error;
     }
 
+    private flushRequestQueue(accessToken?: string, error?: unknown) {
+        this.requestQueue.forEach(({ originalRequest, resolve, reject }) => {
+            if (error || !accessToken) {
+                reject(error);
+                return;
+            }
+
+            originalRequest.headers = {
+                ...originalRequest.headers,
+                Authorization: `Bearer ${accessToken}`,
+            };
+            resolve(this.client.request(originalRequest));
+        });
+        this.requestQueue = [];
+    }
+
     private ensureRefreshPromise() {
         if (!this.refreshPromise) {
             this.token = undefined;
             this.refreshPromise = this.client.post<{ accessToken: string; refreshToken: string }>(
-                `${baseURL}/auth/refresh`,
+                '/auth/refresh',
                 { refreshToken: this.refreshToken }
             );
         }

@@ -1,6 +1,11 @@
-import client from "@/api/apiClient";
 import { createAsyncThunkWrapper } from "@/store/utils/createAsyncThunkWrapper";
 import type { Product, ProductResponse } from "./product.types";
+import type { ProductFormPayload } from "@/lib/types";
+import {
+  createProduct as createProductApi,
+  updateProduct as updateProductApi,
+} from "./product.api";
+import client from "@/api/apiClient";
 
 export const fetchProducts = createAsyncThunkWrapper<
   ProductResponse,
@@ -36,11 +41,14 @@ export const fetchMyProducts = createAsyncThunkWrapper<
 });
 export const createProduct = createAsyncThunkWrapper<
   any,
-  FormData
->("product/create", async (formData) => {
-  const res = await client.post("/products", formData, {
-      "Content-Type": "multipart/form-data",
-  });
+  { payload: ProductFormPayload; files?: File[] }
+>("product/create", async ({ payload, files }) => {
+  return createProductApi(payload, files);
+});
 
-  return res.data;
+export const updateProduct = createAsyncThunkWrapper<
+  any,
+  { productId: string; payload: ProductFormPayload; files?: File[] }
+>("product/update", async ({ productId, payload, files }) => {
+  return updateProductApi(productId, payload, files);
 });

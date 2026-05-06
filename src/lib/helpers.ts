@@ -15,9 +15,13 @@ export const initAuth = (dispatch: any) => {
   const saved = localStorage.getItem("token");
 
   if (saved) {
-    const parsed = JSON.parse(saved);
-
-    client.setToken(parsed.accessToken, parsed.refreshToken);
-    dispatch(updateAuthInfo(parsed));
+    try {
+      const parsed = JSON.parse(saved);
+      client.setToken(parsed.accessToken, parsed.refreshToken);
+      dispatch(updateAuthInfo(parsed));
+    } catch (e) {
+      console.error("Invalid token data in localStorage.", e);
+      localStorage.removeItem("token");
+    }
   }
 };

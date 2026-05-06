@@ -22,6 +22,16 @@ export const protectedRoutes = [
     element: <CreateProduct />,
     roles: ["BRAND_OWNER"], // 🔥 IMPORTANT
   },
+  {
+    path: "/products/:productId",
+    element: <CreateProduct />,
+    roles: ["BRAND_OWNER"],
+  },
+  {
+    path: "/products/edit/:productId",
+    element: <CreateProduct />,
+    roles: ["BRAND_OWNER"],
+  },
    {
     path: "/products/allProducts",
     element: <AllProducts />,

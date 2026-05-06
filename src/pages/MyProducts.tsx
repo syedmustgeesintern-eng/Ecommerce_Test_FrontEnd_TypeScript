@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchMyProducts } from "@/store/features/product";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Eye, Pencil, Trash2 } from "lucide-react";
 
 export default function MyProducts() {
   const dispatch = useAppDispatch();
@@ -23,8 +24,13 @@ export default function MyProducts() {
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-10">
-      <h2 className="text-2xl font-bold mb-6">My Products</h2>
+      <div className="flex justify-between items-center mb-6">
+  <h2 className="text-2xl font-bold">My Products</h2>
 
+  <Button onClick={() => navigate("/products/create")}>
+    Create Product
+  </Button>
+</div>
       {myProducts.length === 0 ? (
         <p>No products found</p>
       ) : (
@@ -62,24 +68,38 @@ export default function MyProducts() {
                     </td>
 
                     <td className="p-3 flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => navigate(`/products/${product.id}`)}
-                      >
-                        View
-                      </Button>
+                      <td className="p-3 text-center">
+                        <div className="flex justify-center items-center gap-2">
+                          {/* 👁️ Preview */}
+                          <Button
+                            size="icon"
+                            variant="outline"
+                            onClick={() => navigate(`/products/${product.id}`)}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
 
-                      <Button
-                        size="sm"
-                        onClick={() => navigate(`/products/edit/${product.id}`)}
-                      >
-                        Edit
-                      </Button>
+                          {/* ✏️ Edit */}
+                          <Button
+                            size="icon"
+                            variant="secondary"
+                            onClick={() =>
+                              navigate(`/products/edit/${product.id}`)
+                            }
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
 
-                      <Button size="sm" variant="destructive">
-                        Delete
-                      </Button>
+                          {/* 🗑️ Delete */}
+                          <Button
+                            size="icon"
+                            variant="destructive"
+                            onClick={() => console.log("Delete", product.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </td>
                     </td>
                   </tr>
                 ))}

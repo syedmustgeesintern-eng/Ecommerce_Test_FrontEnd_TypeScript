@@ -9,11 +9,11 @@ export default function Navbar() {
   const { user } = useAppSelector((state: any) => state.user);
 
   return (
-    <header className="bg-gray-200 rounded h-[100px] border-b border-gray-200">
-      <div className="max-w-7xl mx-auto h-[100px] px-6 py-4 flex content-center  justify-between items-center">
+    <header className="h-[100px] w-full bg-gray-200">
+      <div className="mx-auto flex h-[100px] w-full max-w-7xl items-center justify-between px-6 py-4">
         {/* LOGO */}
         <h1
-          className="text-l  font-bold cursor-pointer"
+          className="text-l font-bold cursor-pointer"
           onClick={() => navigate("/dashboard")}
         >
           Ecommerce
@@ -40,10 +40,8 @@ export default function Navbar() {
             </button>
           )}
           {user?.role === "BRAND_OWNER" && (
-  <button onClick={() => navigate("/my-products")}>
-    My Products
-  </button>
-)}
+            <button onClick={() => navigate("/my-products")}>My Products</button>
+          )}
 
           {/* Role-based */}
           {user?.role === "BRAND_OWNER" && (

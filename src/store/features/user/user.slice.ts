@@ -4,7 +4,7 @@ import type { UserState } from "./user.types";
 
 const initialState: UserState = {
   user: null,
-  loading: false,
+  loading: true,
   error: null,
 };
 

@@ -16,8 +16,8 @@ export type LoginPayload = {
 };
 
 export type AuthTokensPayload = {
-  message: string;
   accessToken: string;
   refreshToken: string;
   expiresIn?: number | null;
+  message?: string;
 };
