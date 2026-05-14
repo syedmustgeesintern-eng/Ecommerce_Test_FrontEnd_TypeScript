@@ -1,10 +1,16 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { fetchMyProducts, fetchProducts } from "./product.thunk";
+import {
+  fetchMyProducts,
+  fetchProductById,
+  fetchProducts,
+} from "./product.thunk";
 import type { ProductState } from "./product.types";
 
 const initialState: ProductState = {
   products: [],
   myProducts: [],
+  selectedProduct: null,
+  detailsLoading: false,
   nextCursor: null,
   myNextCursor: null,
   loading: false,
@@ -35,22 +41,37 @@ const productSlice = createSlice({
 
         state.nextCursor = nextCursor;
       })
-      .addCase(fetchProducts.rejected, (state, action: any) => {
+      .addCase(fetchProducts.rejected, (state, action) => {
         state.loading = false;
         state.error = action?.error?.message || "Something went wrong";
+      })
+      .addCase(fetchMyProducts.pending, (state) => {
+        state.loading = true;
+        state.error = null;
       })
       .addCase(fetchMyProducts.fulfilled, (state, action) => {
         state.loading = false;
 
         const { products, nextCursor } = action.payload;
-
-        if (!action.meta.arg?.cursor) {
-          state.myProducts = products;
-        } else {
-          state.myProducts.push(...products);
-        }
-
+        state.myProducts = products;
         state.myNextCursor = nextCursor;
+      })
+      .addCase(fetchMyProducts.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action?.error?.message || "Failed to fetch products";
+      })
+      .addCase(fetchProductById.pending, (state) => {
+        state.detailsLoading = true;
+        state.selectedProduct = null;
+        state.error = null;
+      })
+      .addCase(fetchProductById.fulfilled, (state, action) => {
+        state.detailsLoading = false;
+        state.selectedProduct = action.payload;
+      })
+      .addCase(fetchProductById.rejected, (state, action) => {
+        state.detailsLoading = false;
+        state.error = action?.error?.message || "Failed to fetch product";
       });
   },
 });

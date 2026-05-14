@@ -1,7 +1,6 @@
 import client from "@/api/apiClient";
 import type {
   RegisterBrandPayload,
-  VerifyOtpPayload,
   UpdateBrandPayload,
 } from "./brand.types";
 import { createAsyncThunkWrapper } from "@/store/utils/createAsyncThunkWrapper";

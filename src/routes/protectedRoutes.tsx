@@ -1,6 +1,10 @@
 import AllProducts from "@/pages/AllProducts";
+import Checkout from "@/pages/Checkout";
 import CreateProduct from "@/pages/CreateProduct";
 import MyProducts from "@/pages/MyProducts";
+import MyOrders from "@/pages/MyOrders";
+import OrderDetails from "@/pages/OrderDetails";
+import ProductDetails from "@/pages/ProductDetails";
 import { lazy } from "react";
 
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
@@ -10,13 +14,18 @@ export const protectedRoutes = [
   {
     path: "/dashboard",
     element: <Dashboard />,
-    roles: ["BRAND_OWNER", "CUSTOMER"],
+    roles: ["BRAND_OWNER"],
   },
   {
     path: "/profile",
     element: <Profile />,
     roles: ["BRAND_OWNER", "CUSTOMER"],
   },
+  {
+     path: "/products/details/:productId",
+     element: <ProductDetails />,
+     roles: ["CUSTOMER"],
+   },
     {
     path: "/products/create",
     element: <CreateProduct />,
@@ -32,11 +41,27 @@ export const protectedRoutes = [
     element: <CreateProduct />,
     roles: ["BRAND_OWNER"],
   },
-   {
-    path: "/products/allProducts",
-    element: <AllProducts />,
-    roles: ["CUSTOMER"], // 🔥 IMPORTANT
-  },
+  {
+  path: "/products",
+  element: <AllProducts />,
+  roles: ["CUSTOMER"],
+},
+{
+  path: "/checkout",
+  element: <Checkout />,
+  roles: ["CUSTOMER"],
+},
+{
+  path: "/my-orders",
+  element: <MyOrders />,
+  roles: ["CUSTOMER"],
+},
+{
+  path: "/orders/:orderId",
+  element: <OrderDetails />,
+  roles: ["CUSTOMER"],
+},
+
   {
     path: "/my-products",
     element: <MyProducts />,

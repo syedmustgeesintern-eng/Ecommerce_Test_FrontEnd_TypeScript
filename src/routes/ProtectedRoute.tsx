@@ -26,8 +26,11 @@ export default function ProtectedRoute({ children, allowedRoles }: Props) {
 
   // ❌ Role not allowed
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/" replace />;
+  if (user.role === "CUSTOMER") {
+    return <Navigate to="/products" replace />;
   }
+  return <Navigate to="/dashboard" replace />;
+}
 
   return children;
 }

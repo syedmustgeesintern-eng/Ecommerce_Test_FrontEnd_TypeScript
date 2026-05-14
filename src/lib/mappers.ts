@@ -1,4 +1,4 @@
-import { createEmptyVariant, DEFAULT_ATTRIBUTE_OPTIONS } from "../lib/constants";
+import {  DEFAULT_ATTRIBUTE_OPTIONS } from "../lib/constants";
 import type {
   FormAttribute,
   ProductFormPayload,
@@ -92,7 +92,7 @@ export function buildProductPayload(form: FormState) {
   const categoryIds = form.categoryIds.filter(Boolean);
 
   const cleanedVariants: VariantFormPayload[] = form.variants
-    .map((v) => {
+    .map((v): VariantFormPayload | null => {
       const cleanedAttributes = v.attributes
         .filter((attr) => attr.attribute && attr.value)
         .map((attr) => ({
@@ -115,7 +115,7 @@ export function buildProductPayload(form: FormState) {
         ...(cleanedAttributes.length > 0 && { attributes: cleanedAttributes }),
       };
     })
-    .filter(Boolean);
+    .filter((variant): variant is VariantFormPayload => variant !== null);
 
   const formattedData: ProductFormPayload = {
     name: form.name,

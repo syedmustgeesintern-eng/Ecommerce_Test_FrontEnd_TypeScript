@@ -5,12 +5,16 @@ import authReducer from "./features/auth/auth.slice";
 import brandReducer from "./features/brand/brand.slice";
 import { userReducer } from "./features/user";
 import { productReducer } from "./features/product";
+import { cartReducer } from "./features/cart";
+import { orderReducer } from "./features/order";
 
 const rootReducer = combineReducers({
   auth: authReducer,
   brand: brandReducer,
   user:userReducer,
-  product:productReducer
+  product:productReducer,
+  cart: cartReducer,
+  order: orderReducer,
 });
 
 export const store = configureStore({

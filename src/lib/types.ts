@@ -1,6 +1,12 @@
 export type Category = {
   id: string;
   name: string;
+  slug?: string;
+  parentId?: string | null;
+  level?: number;
+  isActive?: boolean;
+  hasChildren?: boolean;
+  children?: Category[];
 };
 
 export type VariantFormPayload = {

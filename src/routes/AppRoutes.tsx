@@ -19,10 +19,11 @@ function Loader() {
 
 // ✅ ROLE BASED LAYOUT SWITCH
 function RoleBasedLayout() {
-  const { user } = useAppSelector((state: any) => state.user);
+  const { user } = useAppSelector((state) => state.user);
 
   if (!user) return null;
 
+  // 🔥 BRAND OWNER → normal flow
   if (user.role === "BRAND_OWNER") {
     return <BrandLayout />;
   }

@@ -7,27 +7,15 @@ import {
 } from "./product.api";
 import client from "@/api/apiClient";
 
+type ProductMutationResponse = {
+  message?: string;
+};
+
 export const fetchProducts = createAsyncThunkWrapper<
   ProductResponse,
   { cursor?: string }
 >("product/fetchAll", async ({ cursor }) => {
   const res = await client.get("/products", {
-    params: {
-      limit: 2,
-      cursor,
-    },
-  });
-
-  return {
-    products: res.data.data,
-    nextCursor: res.data.nextCursor,
-  };
-});
-export const fetchMyProducts = createAsyncThunkWrapper<
-  { products: Product[]; nextCursor: string | null },
-  { cursor?: string }
->("product/fetchMy", async ({ cursor }) => {
-  const res = await client.get("/products/my", {
     params: {
       limit: 10,
       cursor,
@@ -35,20 +23,49 @@ export const fetchMyProducts = createAsyncThunkWrapper<
   });
 
   return {
-    products: res.data.data,
-    nextCursor: res.data.nextCursor,
+    products: res.data?.data ?? [],
+    nextCursor: res.data?.nextCursor ?? null,
+  };
+});
+export const fetchMyProducts = createAsyncThunkWrapper<
+  { products: Product[]; nextCursor: string | null },
+  { cursor?: string | null; limit?: number }
+>("product/fetchMy", async ({ cursor, limit = 20 }) => {
+  const res = await client.get("/products/my", {
+    params: {
+      limit,
+      cursor: cursor || undefined,
+    },
+  });
+
+  return {
+    products: res.data?.data ?? [],
+    nextCursor: res.data?.nextCursor ?? null,
   };
 });
 export const createProduct = createAsyncThunkWrapper<
-  any,
+  ProductMutationResponse,
   { payload: ProductFormPayload; files?: File[] }
 >("product/create", async ({ payload, files }) => {
-  return createProductApi(payload, files);
+  return (await createProductApi(payload, files)) as ProductMutationResponse;
 });
 
 export const updateProduct = createAsyncThunkWrapper<
-  any,
+  ProductMutationResponse,
   { productId: string; payload: ProductFormPayload; files?: File[] }
 >("product/update", async ({ productId, payload, files }) => {
-  return updateProductApi(productId, payload, files);
+  return (await updateProductApi(
+    productId,
+    payload,
+    files,
+  )) as ProductMutationResponse;
+});
+
+export const fetchProductById = createAsyncThunkWrapper<
+  Product,
+  string
+>("product/fetchById", async (productId) => {
+  const res = await client.get(`/products/${productId}`);
+
+  return res.data?.data ?? res.data;
 });

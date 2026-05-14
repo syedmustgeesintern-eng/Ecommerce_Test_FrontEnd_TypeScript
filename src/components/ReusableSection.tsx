@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Button } from "./button";
-import { Input } from "./input";
-import { Spinner } from "./spinner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 
 type Field = {
   name: string;

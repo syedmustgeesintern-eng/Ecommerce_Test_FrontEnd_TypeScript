@@ -24,6 +24,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import FormField from "@/components/FormField";
 import type {
   Category,
+  FormAttribute,
   FormState,
   ImageItem,
   ProductDetailsResponse,
@@ -85,11 +86,85 @@ export default function CreateProduct() {
     }));
   };
 
+  const categoryNameById = useMemo(() => {
+    const lookup = new Map<string, string>();
+
+    const walk = (items: Category[]) => {
+      items.forEach((category) => {
+        lookup.set(category.id, category.name);
+        if (category.children?.length) {
+          walk(category.children);
+        }
+      });
+    };
+
+    walk(categories);
+    return lookup;
+  }, [categories]);
+
+  const selectedCategoryLabel = useMemo(() => {
+    if (form.categoryIds.length === 0) {
+      return "Select categories";
+    }
+
+    const names = form.categoryIds
+      .map((id) => categoryNameById.get(id))
+      .filter(Boolean);
+
+    if (names.length === 0) {
+      return `${form.categoryIds.length} categor${
+        form.categoryIds.length > 1 ? "ies" : "y"
+      } selected`;
+    }
+
+    if (names.length <= 2) {
+      return names.join(", ");
+    }
+
+    return `${names.slice(0, 2).join(", ")} +${names.length - 2} more`;
+  }, [categoryNameById, form.categoryIds]);
+
+  const renderCategoryOptions = (items: Category[], depth = 0) =>
+    items.map((category) => {
+      const isDisabled =
+        category.isActive === false || (isViewingExisting && !isEditRoute);
+
+      return (
+        <div key={category.id}>
+          <label
+            className={`flex cursor-pointer items-center gap-2 rounded px-2 py-2 text-sm transition hover:bg-gray-50 ${
+              isDisabled ? "cursor-not-allowed opacity-50" : "text-gray-700"
+            }`}
+            style={{ paddingLeft: `${8 + depth * 18}px` }}
+          >
+            <Checkbox
+              checked={form.categoryIds.includes(category.id)}
+              onCheckedChange={() => toggleCategory(category.id)}
+              disabled={isDisabled}
+            />
+
+            <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
+              <span className="truncate">{category.name}</span>
+              {category.children?.length ? (
+                <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
+                  {category.children.length}
+                </span>
+              ) : null}
+            </span>
+          </label>
+
+          {category.children?.length
+            ? renderCategoryOptions(category.children, depth + 1)
+            : null}
+        </div>
+      );
+    });
+
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         setCategoriesLoading(true);
-        const res = await client.get("/categories");
+        const res = await client.get("/categories/tree");
         const categoryList = Array.isArray(res.data)
           ? res.data
           : res.data?.data;
@@ -184,18 +259,20 @@ export default function CreateProduct() {
   const handleAttributeChange = (
     variantLocalId: string,
     attrIndex: number,
-    field: string,
+    field: keyof FormAttribute | "hex",
     value: string,
   ) => {
     setVariantsTouched(true);
     const variantIndex = getVariantIndex(variantLocalId);
     if (variantIndex < 0) return;
     const updated = [...form.variants];
+    const attribute = updated[variantIndex].attributes[attrIndex];
+    if (!attribute) return;
 
     if (field === "hex") {
-      updated[variantIndex].attributes[attrIndex].meta.hex = value;
+      attribute.meta = { ...attribute.meta, hex: value };
     } else {
-      updated[variantIndex].attributes[attrIndex][field] = value;
+      attribute[field] = value;
     }
 
     setForm({ ...form, variants: updated });
@@ -415,39 +492,20 @@ export default function CreateProduct() {
       <div>
         <h3 className="font-semibold mb-2">Categories</h3>
         <details className="relative w-full">
-          <summary className="list-none w-full cursor-pointer rounded-md border px-3 py-2 text-sm text-gray-700 flex items-center justify-between group">
-            <span>
-              {form.categoryIds.length > 0
-                ? `${form.categoryIds.length} categor${
-                    form.categoryIds.length > 1 ? "ies" : "y"
-                  } selected`
-                : "Select categories"}
-            </span>
+          <summary className="list-none w-full cursor-pointer rounded-md border bg-white px-3 py-2 text-sm text-gray-700 flex items-center justify-between gap-3 group">
+            <span className="min-w-0 truncate">{selectedCategoryLabel}</span>
 
-            {/* 🔽 ICON */}
-            <ChevronDown className="w-4 h-4 transition-transform duration-200 group-open:rotate-180" />
+            <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-open:rotate-180" />
           </summary>
 
-          <div className="absolute z-20 mt-2 w-full rounded-md border bg-white p-3 shadow">
+          <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-md border bg-white shadow">
             {categoriesLoading ? (
-              <p className="text-sm text-gray-500">Loading categories...</p>
+              <p className="p-3 text-sm text-gray-500">Loading categories...</p>
             ) : categories.length === 0 ? (
-              <p className="text-sm text-gray-500">No categories found</p>
+              <p className="p-3 text-sm text-gray-500">No categories found</p>
             ) : (
-              <div className="max-h-52 space-y-2 overflow-auto">
-                {categories.map((category) => (
-                  <label
-                    key={category.id}
-                    className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer hover:bg-gray-50 px-2 py-1 rounded"
-                  >
-                    <Checkbox
-                      checked={form.categoryIds.includes(category.id)}
-                      onCheckedChange={() => toggleCategory(category.id)}
-                      disabled={isViewingExisting && !isEditRoute}
-                    />
-                    <span>{category.name}</span>
-                  </label>
-                ))}
+              <div className="max-h-64 overflow-auto py-1">
+                {renderCategoryOptions(categories)}
               </div>
             )}
           </div>
