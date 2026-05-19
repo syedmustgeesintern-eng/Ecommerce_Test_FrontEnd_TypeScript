@@ -4,6 +4,7 @@ import { ChevronRight, PackageOpen, ShoppingBag } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Spinner } from "@/components/ui/spinner";
 import { fetchMyOrders } from "@/store/features/order";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 
@@ -50,13 +51,8 @@ export default function MyOrders() {
       )}
 
       {loading && orders.length === 0 ? (
-        <div className="space-y-3">
-          {Array.from({ length: 3 }).map((_, index) => (
-            <div
-              key={index}
-              className="h-32 animate-pulse rounded-lg bg-gray-100"
-            />
-          ))}
+        <div className="flex min-h-[300px] items-center justify-center">
+          <Spinner className="h-8 w-8" />
         </div>
       ) : orders.length === 0 ? (
         <div className="rounded-lg border border-dashed border-gray-300 bg-white p-8 text-center">
@@ -117,7 +113,14 @@ export default function MyOrders() {
                   dispatch(fetchMyOrders({ limit: 5, cursor: nextCursor }))
                 }
               >
-                {loading ? "Loading..." : "Load more"}
+                {loading ? (
+                  <>
+                    <Spinner className="mr-2" />
+                    Loading...
+                  </>
+                ) : (
+                  "Load more"
+                )}
               </Button>
             </div>
           )}

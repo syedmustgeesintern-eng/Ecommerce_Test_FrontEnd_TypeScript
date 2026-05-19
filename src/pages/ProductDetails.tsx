@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { notify } from "@/components/ui/notify";
+import { useProtectedAction } from "@/hooks/useProtectedAction";
 
 export default function ProductDetails() {
   const { productId } = useParams();
@@ -18,7 +19,8 @@ export default function ProductDetails() {
   const { selectedProduct, detailsLoading } = useAppSelector(
     (state: any) => state.product,
   );
-  const { mutationLoading: cartBusy } = useAppSelector((state) => state.cart);
+  const { mutationLoading: cartBusy, cart } = useAppSelector((state) => state.cart);
+  const withAuth = useProtectedAction();
 
   const [selectedImage, setSelectedImage] = useState("");
   const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({});
@@ -137,12 +139,12 @@ export default function ProductDetails() {
 
   const displayedStock = selectedVariant ? selectedVariant.stock : totalStock;
 
-  // Clamp quantity when variant stock changes
+  // Sync quantity with cart when selected variant changes
   useEffect(() => {
-    if (selectedVariant && quantity > selectedVariant.stock) {
-      setQuantity(Math.max(1, selectedVariant.stock));
-    }
-  }, [selectedVariant, quantity]);
+    if (!selectedVariant) return;
+    const cartItem = cart?.items.find((item) => item.variant.id === selectedVariant.id);
+    setQuantity(cartItem ? cartItem.quantity : 1);
+  }, [selectedVariant, cart]);
 
   const handleAddToCart = async () => {
     if (!selectedVariant) {
@@ -157,8 +159,18 @@ export default function ProductDetails() {
       notify(`Only ${selectedVariant.stock} available in stock.`, "error");
       return false;
     }
+
+    const cartItem = cart?.items.find((item) => item.variant.id === selectedVariant.id);
+    const alreadyInCart = cartItem?.quantity ?? 0;
+    const delta = quantity - alreadyInCart;
+
+    if (delta <= 0) {
+      // notify("Quantity is already set to that amount in your cart.", "warning");
+      return false;
+    }
+
     try {
-      await dispatch(addToCart({ variantId: selectedVariant.id, quantity })).unwrap();
+      await dispatch(addToCart({ variantId: selectedVariant.id, quantity: delta })).unwrap();
       notify("Added to cart", "success");
       dispatch(fetchCart());
       return true;
@@ -242,8 +254,8 @@ export default function ProductDetails() {
             <p className="text-4xl font-bold">${selectedProduct.basePrice}</p>
           </div>
 
-          <div className="mt-4 text-sm text-gray-500">SKU: {selectedProduct.sku}</div>
-          <div className="mt-2 text-sm text-gray-500">Stock: {displayedStock}</div>
+          {/* <div className="mt-4 text-sm text-gray-500">SKU: {selectedProduct.sku}</div>
+          <div className="mt-2 text-sm text-gray-500">Stock: {displayedStock}</div> */}
 
           {/* DYNAMIC ATTRIBUTES */}
           {productAttributes.length > 0 && (
@@ -328,7 +340,7 @@ export default function ProductDetails() {
                   cartBusy ||
                   (selectedVariant ? quantity > selectedVariant.stock : true)
                 }
-                onClick={() => void handleAddToCart()}
+                onClick={() => void withAuth(() => handleAddToCart())}
               >
                 {cartBusy ? "Adding…" : "Add To Cart"}
               </Button>
@@ -343,7 +355,7 @@ export default function ProductDetails() {
                   cartBusy ||
                   (selectedVariant ? quantity > selectedVariant.stock : true)
                 }
-                onClick={() => void handleBuyNow()}
+                onClick={() => void withAuth(() => handleBuyNow())}
               >
                 Buy Now
               </Button>

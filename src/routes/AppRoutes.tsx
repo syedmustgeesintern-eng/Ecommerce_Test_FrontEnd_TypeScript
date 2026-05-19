@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Suspense } from "react";
 import { publicRoutes } from "./publicRoutes";
+import { browseRoutes } from "./browseRoutes";
 import { protectedRoutes } from "./protectedRoutes";
 import ProtectedRoute from "./ProtectedRoute";
 import { useAppSelector } from "@/store/hooks";
@@ -41,6 +42,13 @@ export default function AppRoutes() {
           {publicRoutes.map((route) => (
             <Route key={route.path} path={route.path} element={route.element} />
           ))}
+
+          {/* BROWSE ROUTES — public but rendered inside CustomerLayout */}
+          <Route element={<CustomerLayout />}>
+            {browseRoutes.map((route) => (
+              <Route key={route.path} path={route.path} element={route.element} />
+            ))}
+          </Route>
 
           {/* PROTECTED ROUTES */}
           <Route

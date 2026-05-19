@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { PackageCheck, ShoppingCart } from "lucide-react";
+import { PackageCheck, ShoppingCart, Store } from "lucide-react";
 
 import CartSheet from "@/components/CartSheet";
+import { Button } from "@/components/ui/button";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { logout } from "@/store/features/auth";
 import { fetchCart } from "@/store/features/cart";
@@ -10,7 +11,8 @@ import { fetchCart } from "@/store/features/cart";
 export default function Navbar() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { user } = useAppSelector((state: any) => state.user);
+
+  const { user, loading } = useAppSelector((state: any) => state.user);
   const itemCount = useAppSelector((state) => state.cart.cart?.itemCount ?? 0);
 
   const [cartOpen, setCartOpen] = useState(false);
@@ -21,107 +23,152 @@ export default function Navbar() {
     }
   }, [dispatch, user?.role]);
 
-  const goHome = () => {
-    if (user?.role === "CUSTOMER") {
-      navigate("/products");
-    } else {
-      navigate("/dashboard");
-    }
-  };
-
   return (
-    <header className="h-[100px] w-full bg-gray-200">
-      <div className="mx-auto flex h-[100px] w-full items-center justify-between bg-gray-900 px-6 py-4 text-white">
-        <h1
-          className="cursor-pointer text-lg font-bold"
-          onClick={goHome}
+    <header className="w-full bg-gray-900 text-white">
+      <div className="mx-auto flex h-[68px] w-full max-w-7xl items-center justify-between px-6">
+
+        {/* ── Logo ─────────────────────────────────────────── */}
+        <button
+          type="button"
+          className="flex items-center gap-2 text-lg font-bold tracking-tight hover:opacity-80 transition-opacity"
+          onClick={() => {
+            if (user?.role === "BRAND_OWNER") navigate("/dashboard");
+            else navigate("/products");
+          }}
         >
+          <Store className="h-5 w-5" />
           BrandHub
-        </h1>
+        </button>
 
-        <div className="flex items-center gap-6">
-          {user?.role === "BRAND_OWNER" && (
-            <>
-              <button
-                type="button"
-                className="text-sm hover:underline"
-                onClick={() => navigate("/dashboard")}
-              >
-                Dashboard
-              </button>
-              <button
-                type="button"
-                className="text-sm hover:underline"
-                onClick={() => navigate("/products/create")}
-              >
-                Create Product
-              </button>
-              <button
-                type="button"
-                className="text-sm hover:underline"
-                onClick={() => navigate("/my-products")}
-              >
-                My Products
-              </button>
-              <button
-                type="button"
-                className="text-sm hover:underline"
-                onClick={() => navigate("/brand")}
-              >
-                Brand
-              </button>
-            </>
-          )}
+        {/* ── Right side — depends on auth state ───────────── */}
 
-          {/* {user?.role === "CUSTOMER" && (
+        {/* Loading skeleton — prevents flicker while getMe resolves */}
+        {loading ? (
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-20 rounded-full bg-white/10 animate-pulse" />
+            <div className="h-8 w-20 rounded-full bg-white/10 animate-pulse" />
+          </div>
+        ) : !user ? (
+          /* ── GUEST ─────────────────────────────────────── */
+          <nav className="flex items-center gap-2">
             <button
               type="button"
-              className="text-sm hover:underline"
+              className="text-sm text-white/80 hover:text-white px-3 py-1.5 rounded-md transition-colors"
               onClick={() => navigate("/products")}
             >
-              Shop
+              Products
             </button>
-          )} */}
-        </div>
 
-        <div className="flex items-center gap-4">
-          {user?.role === "CUSTOMER" && (
-            <>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-white hover:bg-white/10 rounded-full px-4"
+              onClick={() => navigate("/sign-in")}
+            >
+              Login
+            </Button>
+
+            <Button
+              size="sm"
+              className="bg-white text-gray-900 hover:bg-gray-100 rounded-full px-4 font-semibold"
+              onClick={() => navigate("/customer/signup")}
+            >
+              Sign Up
+            </Button>
+          </nav>
+        ) : user.role === "BRAND_OWNER" ? (
+          /* ── BRAND OWNER ────────────────────────────────── */
+          <div className="flex items-center gap-5">
+            <nav className="flex items-center gap-4">
+              {[
+                { label: "Dashboard", path: "/dashboard" },
+                { label: "Create Product", path: "/products/create" },
+                { label: "My Products", path: "/my-products" },
+                { label: "Brand", path: "/brand" },
+              ].map(({ label, path }) => (
+                <button
+                  key={path}
+                  type="button"
+                  className="text-sm text-white/80 hover:text-white transition-colors"
+                  onClick={() => navigate(path)}
+                >
+                  {label}
+                </button>
+              ))}
+            </nav>
+
+            <div className="flex items-center gap-3 border-l border-white/20 pl-5">
               <button
                 type="button"
-                className="inline-flex items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-white/10"
-                onClick={() => navigate("/my-orders")}
+                className="text-sm font-medium hover:underline"
+                onClick={() => navigate("/profile")}
               >
-                <PackageCheck className="h-4 w-4" />
-                Orders
+                {user.name || "Profile"}
               </button>
               <button
                 type="button"
-                className="relative rounded-md p-2 hover:bg-white/10"
-                onClick={() => setCartOpen(true)}
-                aria-label="Open cart"
+                className="text-sm text-red-400 hover:text-red-300 transition-colors"
+                onClick={() => dispatch(logout(navigate))}
               >
-                <ShoppingCart className="h-6 w-6" />
-                {itemCount > 0 && (
-                  <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-medium text-white">
-                    {itemCount > 99 ? "99+" : itemCount}
-                  </span>
-                )}
+                Logout
               </button>
-              <CartSheet open={cartOpen} onClose={() => setCartOpen(false)} />
-            </>
-          )}
+            </div>
+          </div>
+        ) : (
+          /* ── CUSTOMER ───────────────────────────────────── */
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              className="text-sm text-white/80 hover:text-white transition-colors"
+              onClick={() => navigate("/products")}
+            >
+              Products
+            </button>
 
-          <span className="font-medium">{user?.name || "User"}</span>
+            <button
+              type="button"
+              className="inline-flex items-center gap-1.5 text-sm text-white/80 hover:text-white rounded-md px-2 py-1.5 transition-colors"
+              onClick={() => navigate("/my-orders")}
+            >
+              <PackageCheck className="h-4 w-4" />
+              Orders
+            </button>
 
-          <button
-            type="button"
-            className="text-sm text-red-400 hover:underline"
-            onClick={() => dispatch(logout(navigate))}
-          >
-            Logout
-          </button>
-        </div>
+            {/* Cart icon with badge */}
+            <button
+              type="button"
+              className="relative rounded-md p-2 hover:bg-white/10 transition-colors"
+              onClick={() => setCartOpen(true)}
+              aria-label="Open cart"
+            >
+              <ShoppingCart className="h-5 w-5" />
+              {itemCount > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-medium">
+                  {itemCount > 99 ? "99+" : itemCount}
+                </span>
+              )}
+            </button>
+
+            <CartSheet open={cartOpen} onClose={() => setCartOpen(false)} />
+
+            <div className="flex items-center gap-3 border-l border-white/20 pl-4">
+              <button
+                type="button"
+                className="text-sm font-medium hover:underline"
+                onClick={() => navigate("/profile")}
+              >
+                {user.name || "Profile"}
+              </button>
+              <button
+                type="button"
+                className="text-sm text-red-400 hover:text-red-300 transition-colors"
+                onClick={() => dispatch(logout(navigate))}
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </header>
   );

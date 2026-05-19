@@ -1,24 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import Navbar from "@/components/Navbar";
 
 export default function LandingPage() {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Navbar */}
-      <header className="flex justify-between items-center px-8 py-4 border-b">
-        <h1
-          className="text-xl font-bold cursor-pointer"
-          onClick={() => navigate("/")}
-        >
-          BrandHub
-        </h1>
-
-        <Button variant="outline" onClick={() => navigate("/sign-in")}>
-          Login
-        </Button>
-      </header>
+      <Navbar />
 
       {/* Hero Section */}
       <section className="flex flex-col items-center justify-center text-center px-6 py-24 space-y-6">
@@ -31,29 +20,25 @@ export default function LandingPage() {
           powerful eCommerce platform.
         </p>
 
-        <div className="flex gap-4">
-          {/* ✅ Go to signup */}
-       <div className="flex gap-4">
-  <Button size="lg" onClick={() => navigate("/brand/signup")}>
-    Sign Up as Brand
-  </Button>
+        <div className="flex flex-wrap justify-center gap-4">
+          <Button size="lg" onClick={() => navigate("/brand/signup")}>
+            Sign Up as Brand
+          </Button>
 
-  <Button
-    size="lg"
-    variant="secondary"
-    onClick={() => navigate("/customer/signup")}
-  >
-    Sign Up as Customer
-  </Button>
-</div>
+          <Button
+            size="lg"
+            variant="secondary"
+            onClick={() => navigate("/customer/signup")}
+          >
+            Sign Up as Customer
+          </Button>
 
-          {/* Optional */}
           <Button
             variant="outline"
             size="lg"
-            onClick={() => navigate("/about")}
+            onClick={() => navigate("/products")}
           >
-            Learn More
+            Browse Products →
           </Button>
         </div>
       </section>
@@ -84,11 +69,18 @@ export default function LandingPage() {
 
       {/* CTA */}
       <section className="text-center py-20 bg-gray-100">
-        <h2 className="text-3xl font-bold mb-4">Ready to launch your brand?</h2>
-
-        <Button size="lg" onClick={() => navigate("/brand/signup")}>
-          Sign Up as Brand
-        </Button>
+        <h2 className="text-3xl font-bold mb-4">Ready to explore?</h2>
+        <p className="text-gray-600 mb-6">
+          Browse thousands of products or launch your own brand today.
+        </p>
+        <div className="flex justify-center gap-4">
+          <Button size="lg" onClick={() => navigate("/products")}>
+            Shop Now
+          </Button>
+          <Button size="lg" variant="outline" onClick={() => navigate("/brand/signup")}>
+            Start Selling
+          </Button>
+        </div>
       </section>
     </div>
   );

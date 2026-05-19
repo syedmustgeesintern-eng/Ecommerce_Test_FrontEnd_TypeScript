@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, CheckCircle2, MapPin, Package } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { normalizeAttributes } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { fetchOrderById } from "@/store/features/order";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -116,7 +117,7 @@ export default function OrderDetails() {
                   </div>
 
                   <div className="mt-3 flex flex-wrap gap-2 text-xs text-gray-600">
-                    {Object.entries(item.selectedAttributes ?? {}).map(
+                    {Object.entries(normalizeAttributes(item.selectedAttributes ?? {})).map(
                       ([key, value]) => (
                         <span
                           key={key}
@@ -130,7 +131,7 @@ export default function OrderDetails() {
                       Qty: {item.quantity}
                     </span>
                     <span className="rounded-md bg-gray-100 px-2 py-1">
-                      Unit: {formatMoney(item.unitPrice)}
+                      Unit Price: {formatMoney(item.unitPrice)}
                     </span>
                   </div>
                 </div>
@@ -163,25 +164,26 @@ export default function OrderDetails() {
             </section>
           ) : null}
 
-          <section className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-            <div className="mb-4 flex items-center gap-2">
-              <MapPin className="h-5 w-5 text-gray-800" />
-              <h2 className="text-xl font-semibold text-gray-950">Shipping</h2>
-            </div>
-            <div className="space-y-1 text-sm text-gray-600">
-              <p className="font-medium text-gray-950">
-                {order.shippingAddress.fullName}
-              </p>
-              <p>{order.shippingAddress.phone}</p>
-              <p>{order.shippingAddress.addressLine1}</p>
-              {order.shippingAddress.addressLine2 ? (
-                <p>{order.shippingAddress.addressLine2}</p>
-              ) : null}
-              <p>
-                {order.shippingAddress.city}, {order.shippingAddress.postalCode}
-              </p>
-            </div>
-          </section>
+          {(() => {
+            const addr = order.shippingAddress ?? order.shippingAddressOverride;
+            return addr ? (
+              <section className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+                <div className="mb-4 flex items-center gap-2">
+                  <MapPin className="h-5 w-5 text-gray-800" />
+                  <h2 className="text-xl font-semibold text-gray-950">Shipping</h2>
+                </div>
+                <div className="space-y-1 text-sm text-gray-600">
+                  <p className="font-medium text-gray-950">{addr.fullName}</p>
+                  <p>{addr.phoneNumber}</p>
+                  <p>{addr.streetAddress}</p>
+                  <p>
+                    {addr.city}, {addr.state} {addr.postalCode}
+                  </p>
+                  <p>{addr.country}</p>
+                </div>
+              </section>
+            ) : null;
+          })()}
 
           <section className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
             <h2 className="mb-4 text-xl font-semibold text-gray-950">

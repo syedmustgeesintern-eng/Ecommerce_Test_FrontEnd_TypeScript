@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { useNavigate } from "react-router-dom";
 import { fetchProducts } from "@/store/features/product";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import client from "@/api/apiClient";
 import CustomSelect from "@/components/CustomSelect";
+import ProductCard from "@/components/ProductCard";
 import type { Category } from "@/lib/types";
-import type { Product } from "@/store/features/product";
 import { Filter, Search, X } from "lucide-react";
 
 import {
@@ -45,7 +44,6 @@ const buildCategoryOptions = (
 
 export default function AllProducts() {
   const dispatch = useAppDispatch();
-  const navigate = useNavigate();
 
   const { products, loading, error, nextCursor } = useAppSelector(
     (state) => state.product,
@@ -183,73 +181,6 @@ export default function AllProducts() {
   // 🔥 TEMP LOGIC (replace with backend later)
   const topRatedProducts = filteredProducts.slice(0, 8);
   const mostPopularProducts = [...filteredProducts].reverse().slice(0, 8);
-
-  // ✅ Reusable Card
-  const ProductCard = ({ product }: { product: Product }) => {
-    const isOutOfStock =
-      product.variants?.length > 0 &&
-      product.variants.every((v) => v.stock === 0);
-    const isNew =
-      !isOutOfStock &&
-      !!product.createdAt &&
-      Date.now() - new Date(product.createdAt).getTime() <
-        10 * 24 * 60 * 60 * 1000;
-
-    return (
-      <div
-        className="group bg-white rounded-2xl overflow-hidden border border-gray-100
-  shadow-sm hover:shadow-2xl hover:shadow-black/10
-  hover:-translate-y-1 hover:border-gray-200
-  transition-all duration-300 cursor-pointer"
-      >
-        {/* IMAGE */}
-        <div className="relative overflow-hidden aspect-square bg-gray-100">
-          <img
-            src={
-              product.images?.[0] ||
-              "https://via.placeholder.com/500x500?text=Product"
-            }
-            alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          />
-
-          {isOutOfStock ? (
-            <div className="absolute top-3 left-3 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-              Out of Stock
-            </div>
-          ) : isNew ? (
-            <div className="absolute top-3 left-3 bg-black text-white text-xs px-2 py-1 rounded-full">
-              New
-            </div>
-          ) : null}
-        </div>
-
-        {/* CONTENT */}
-        <div className="p-4">
-          <h3 className="font-semibold text-lg text-gray-900 line-clamp-1">
-            {product.name}
-          </h3>
-
-          <p className="text-sm text-gray-500 mt-1 line-clamp-2 min-h-[40px]">
-            {product.description || "Premium quality product"}
-          </p>
-
-          {/* PRICE + CTA */}
-          <div className="flex items-center justify-between mt-4">
-            <p className="text-lg font-bold text-black">${product.basePrice}</p>
-
-            <Button
-              size="sm"
-              className="rounded-full px-4 opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300"
-              onClick={() => navigate(`/products/details/${product.id}`)}
-            >
-              View
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   if (loading && !products.length) {
     return (

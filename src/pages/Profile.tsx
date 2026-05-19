@@ -1,19 +1,43 @@
 // src/pages/Profile.tsx
 
 import { useEffect, useRef, useState } from "react";
+import { ChevronDown, ChevronUp, MapPin, Plus, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { notify } from "@/components/ui/notify";
 import { getBrandMe, updateBrand } from "@/store/features/brand";
 import { changePassword } from "@/store/features/auth";
 import { Spinner } from "@/components/ui/spinner";
 import FormField from "@/components/FormField";
-import { getMe, updateUser } from "@/store/features/user";
+import {
+  createAddress,
+  fetchAddresses,
+  getMe,
+  setDefaultAddress,
+  updateAddress,
+  updateUser,
+} from "@/store/features/user";
+import type { CreateAddressPayload, UserAddress } from "@/store/features/user";
 import { changePasswordSchema } from "@/validation/schema/changePasswordSchema";
+
+const emptyAddressForm = (): CreateAddressPayload => ({
+  fullName: "",
+  phoneNumber: "",
+  country: "",
+  city: "",
+  state: "",
+  postalCode: "",
+  streetAddress: "",
+  addressLabel: "Home",
+  isDefault: false,
+});
 
 export default function Profile() {
   const dispatch = useAppDispatch();
-  const { user } = useAppSelector((state: any) => state.user);
+  const { user, addresses, addressesLoading, addressMutating } = useAppSelector(
+    (state: any) => state.user,
+  );
   const { brand } = useAppSelector((state: any) => state.brand);
   const [brandLoading, setBrandLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
@@ -23,6 +47,13 @@ export default function Profile() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [isUserEditing, setIsUserEditing] = useState(false);
+
+  // ADDRESS STATE
+  const [expandedAddressId, setExpandedAddressId] = useState<string | null>(null);
+  const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [editForm, setEditForm] = useState<Partial<UserAddress>>({});
+  const [addForm, setAddForm] = useState<CreateAddressPayload>(emptyAddressForm());
   //  USER FORM
   const [userForm, setUserForm] = useState({
     name: "",
@@ -212,6 +243,52 @@ useEffect(() => {
     }
   };
   const isCustomer = user?.role === "CUSTOMER";
+
+  // Fetch addresses on mount for customers
+  useEffect(() => {
+    if (isCustomer) dispatch(fetchAddresses());
+  }, [isCustomer, dispatch]);
+
+  // ADDRESS HANDLERS
+  const handleCreateAddress = async () => {
+    const required: (keyof CreateAddressPayload)[] = [
+      "fullName", "phoneNumber", "country", "city", "state", "postalCode", "streetAddress",
+    ];
+    for (const key of required) {
+      if (!addForm[key]) {
+        notify(`${key} is required`, "error");
+        return;
+      }
+    }
+    try {
+      await dispatch(createAddress(addForm)).unwrap();
+      notify("Address added", "success");
+      setShowAddForm(false);
+      setAddForm(emptyAddressForm());
+    } catch (e: any) {
+      notify(e?.message || "Failed to add address", "error");
+    }
+  };
+
+  const handleUpdateAddress = async (id: string) => {
+    try {
+      await dispatch(updateAddress({ id, data: editForm })).unwrap();
+      notify("Address updated", "success");
+      setEditingAddressId(null);
+    } catch (e: any) {
+      notify(e?.message || "Failed to update address", "error");
+    }
+  };
+
+  const handleSetDefault = async (id: string) => {
+    try {
+      await dispatch(setDefaultAddress(id)).unwrap();
+      notify("Default address updated", "success");
+    } catch (e: any) {
+      notify(e?.message || "Failed to set default", "error");
+    }
+  };
+
   return (
     <div className="min-h-screen p-6">
       <div className="w-full bg-white shadow rounded-xl p-6 space-y-6">
@@ -298,7 +375,7 @@ useEffect(() => {
                 onChange={handleBrandChange}
                 disabled={!isBrandEditing}
               />
-
+          
               <FormField
                 label="Phone"
                 name="phone"
@@ -371,14 +448,6 @@ useEffect(() => {
                   value={userForm.email}
                   disabled
                 />
-
-                <FormField
-                  label="Phone"
-                  name="phone"
-                  value={userForm.phone}
-                  onChange={handleUserChange}
-                  disabled={!isUserEditing}
-                />
               </>
             )}
           </div>
@@ -432,6 +501,253 @@ useEffect(() => {
             </Button>
           </div>
         </div>
+
+        {/* ================= ADDRESSES (CUSTOMER ONLY) ================= */}
+        {isCustomer && (
+          <>
+            <div className="border-t border-gray-300 my-6" />
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Saved Addresses</h3>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setShowAddForm((v) => !v);
+                    setAddForm(emptyAddressForm());
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Address
+                </Button>
+              </div>
+
+              {/* ADD FORM */}
+              {showAddForm && (
+                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 space-y-3">
+                  <h4 className="font-medium text-gray-800">New Address</h4>
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    {(
+                      [
+                        { label: "Full Name", key: "fullName" },
+                        { label: "Phone Number", key: "phoneNumber" },
+                        { label: "Street Address", key: "streetAddress" },
+                        { label: "City", key: "city" },
+                        { label: "State", key: "state" },
+                        { label: "Country", key: "country" },
+                        { label: "Postal Code", key: "postalCode" },
+                        { label: "Label (Home / Work)", key: "addressLabel" },
+                      ] as { label: string; key: keyof CreateAddressPayload }[]
+                    ).map(({ label, key }) => (
+                      <div key={key} className="space-y-1">
+                        <label className="text-xs font-medium text-gray-600">{label}</label>
+                        <Input
+                          value={String(addForm[key] ?? "")}
+                          onChange={(e) =>
+                            setAddForm((prev) => ({ ...prev, [key]: e.target.value }))
+                          }
+                          placeholder={label}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={addForm.isDefault}
+                      onChange={(e) =>
+                        setAddForm((prev) => ({ ...prev, isDefault: e.target.checked }))
+                      }
+                    />
+                    Set as default address
+                  </label>
+                  <div className="flex gap-2 pt-1">
+                    <Button size="sm" disabled={addressMutating} onClick={handleCreateAddress}>
+                      {addressMutating ? <Spinner className="mr-1" /> : null}
+                      Save
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setShowAddForm(false)}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* ADDRESS LIST */}
+              {addressesLoading ? (
+                <div className="space-y-3">
+                  {[1, 2].map((i) => (
+                    <div key={i} className="h-14 animate-pulse rounded-xl bg-gray-100" />
+                  ))}
+                </div>
+              ) : addresses.length === 0 ? (
+                <p className="text-sm text-gray-500">No addresses saved yet.</p>
+              ) : (
+                <div className="space-y-3">
+                  {addresses.map((addr: UserAddress) => {
+                    const isExpanded = expandedAddressId === addr.id;
+                    const isEditing = editingAddressId === addr.id;
+                    return (
+                      <div
+                        key={addr.id}
+                        className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden"
+                      >
+                        {/* HEADER ROW — always visible */}
+                        <button
+                          type="button"
+                          className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50 transition"
+                          onClick={() =>
+                            setExpandedAddressId(isExpanded ? null : addr.id)
+                          }
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <MapPin className="h-4 w-4 shrink-0 text-gray-400" />
+                            <div className="min-w-0">
+                              <span className="font-medium text-gray-900 text-sm">
+                                {addr.addressLabel}
+                              </span>
+                              {addr.isDefault && (
+                                <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-black px-2 py-0.5 text-xs text-white">
+                                  <Star className="h-3 w-3" />
+                                  Default
+                                </span>
+                              )}
+                              <p className="text-xs text-gray-500 truncate">
+                                {addr.streetAddress}, {addr.city}
+                              </p>
+                            </div>
+                          </div>
+                          {isExpanded ? (
+                            <ChevronUp className="h-4 w-4 text-gray-400 shrink-0" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4 text-gray-400 shrink-0" />
+                          )}
+                        </button>
+
+                        {/* EXPANDED CONTENT */}
+                        {isExpanded && (
+                          <div className="border-t border-gray-100 px-4 py-4 space-y-4">
+                            {!isEditing ? (
+                              <>
+                                <div className="grid sm:grid-cols-2 gap-x-6 gap-y-2 text-sm text-gray-700">
+                                  {[
+                                    ["Full Name", addr.fullName],
+                                    ["Phone", addr.phoneNumber],
+                                    ["Street", addr.streetAddress],
+                                    ["City", addr.city],
+                                    ["State", addr.state],
+                                    ["Country", addr.country],
+                                    ["Postal Code", addr.postalCode],
+                                  ].map(([label, value]) => (
+                                    <div key={label}>
+                                      <span className="text-xs text-gray-400 uppercase tracking-wide">
+                                        {label}
+                                      </span>
+                                      <p className="font-medium">{value}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                                <div className="flex flex-wrap gap-2 pt-1">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      setEditingAddressId(addr.id);
+                                      setEditForm({
+                                        fullName: addr.fullName,
+                                        phoneNumber: addr.phoneNumber,
+                                        streetAddress: addr.streetAddress,
+                                        city: addr.city,
+                                        state: addr.state,
+                                        country: addr.country,
+                                        postalCode: addr.postalCode,
+                                        addressLabel: addr.addressLabel,
+                                      });
+                                    }}
+                                  >
+                                    Edit
+                                  </Button>
+                                  {!addr.isDefault && (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      disabled={addressMutating}
+                                      onClick={() => handleSetDefault(addr.id)}
+                                    >
+                                      {addressMutating ? (
+                                        <Spinner className="mr-1" />
+                                      ) : (
+                                        <Star className="h-3.5 w-3.5 mr-1" />
+                                      )}
+                                      Set as Default
+                                    </Button>
+                                  )}
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <div className="grid sm:grid-cols-2 gap-3">
+                                  {(
+                                    [
+                                      { label: "Full Name", key: "fullName" },
+                                      { label: "Phone Number", key: "phoneNumber" },
+                                      { label: "Street Address", key: "streetAddress" },
+                                      { label: "City", key: "city" },
+                                      { label: "State", key: "state" },
+                                      { label: "Country", key: "country" },
+                                      { label: "Postal Code", key: "postalCode" },
+                                      { label: "Label", key: "addressLabel" },
+                                    ] as { label: string; key: keyof UserAddress }[]
+                                  ).map(({ label, key }) => (
+                                    <div key={key} className="space-y-1">
+                                      <label className="text-xs font-medium text-gray-600">
+                                        {label}
+                                      </label>
+                                      <Input
+                                        value={String(editForm[key] ?? "")}
+                                        onChange={(e) =>
+                                          setEditForm((prev) => ({
+                                            ...prev,
+                                            [key]: e.target.value,
+                                          }))
+                                        }
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+                                <div className="flex gap-2 pt-1">
+                                  <Button
+                                    size="sm"
+                                    disabled={addressMutating}
+                                    onClick={() => handleUpdateAddress(addr.id)}
+                                  >
+                                    {addressMutating ? <Spinner className="mr-1" /> : null}
+                                    Save
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => setEditingAddressId(null)}
+                                  >
+                                    Cancel
+                                  </Button>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

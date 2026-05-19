@@ -1,4 +1,4 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAppSelector } from "@/store/hooks";
 import type { JSX } from "react";
 
@@ -9,6 +9,7 @@ type Props = {
 
 export default function ProtectedRoute({ children, allowedRoles }: Props) {
   const { user, loading } = useAppSelector((state: any) => state.user);
+  const location = useLocation();
 
   // ⏳ Wait for user
   if (loading) {
@@ -21,7 +22,7 @@ export default function ProtectedRoute({ children, allowedRoles }: Props) {
 
   // ❌ Not logged in
   if (!user) {
-    return <Navigate to="/sign-in" replace />;
+    return <Navigate to="/sign-in" replace state={{ from: location.pathname }} />;
   }
 
   // ❌ Role not allowed

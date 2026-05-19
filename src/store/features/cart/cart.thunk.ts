@@ -1,14 +1,22 @@
 import client from "@/api/apiClient";
 import { createAsyncThunkWrapper } from "@/store/utils/createAsyncThunkWrapper";
-import type { CartResponse } from "./cart.types";
+import type { CartLineItem, CartResponse } from "./cart.types";
 
 const normalizeCart = (raw: unknown): CartResponse => {
   const data = raw as Record<string, unknown>;
+  const rawItems = Array.isArray(data.items)
+    ? (data.items as (Omit<CartLineItem, "lineTotal"> & { lineTotal?: number })[])
+    : [];
+  const items: CartLineItem[] = rawItems.map((item) => ({
+    ...item,
+    lineTotal: item.lineTotal ?? item.unitPrice * item.quantity,
+  }));
+  const subtotal = items.reduce((sum, item) => sum + item.lineTotal, 0);
   return {
     cartId: String(data.cartId ?? ""),
-    items: Array.isArray(data.items) ? (data.items as CartResponse["items"]) : [],
+    items,
     itemCount: Number(data.itemCount ?? 0),
-    subtotal: Number(data.subtotal ?? 0),
+    subtotal,
   };
 };
 

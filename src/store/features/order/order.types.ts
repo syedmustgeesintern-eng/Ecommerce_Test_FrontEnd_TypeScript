@@ -1,11 +1,12 @@
 export type ShippingAddress = {
   id?: string;
   fullName: string;
-  phone: string;
+  phoneNumber: string;
+  country: string;
   city: string;
-  addressLine1: string;
-  addressLine2?: string | null;
+  state: string;
   postalCode: string;
+  streetAddress: string;
 };
 
 export type OrderItemImage = {
@@ -60,7 +61,8 @@ export type Order = {
   orderNumber: string;
   userId: string;
   items: OrderItem[];
-  shippingAddress: ShippingAddress;
+  shippingAddress: ShippingAddress | null;
+  shippingAddressOverride: ShippingAddress | null;
   status: string;
   subtotal: string;
   shippingFee: string;
@@ -71,11 +73,9 @@ export type Order = {
 };
 
 export type CreateOrderPayload = {
-  items: {
-    variantId: string;
-    quantity: number;
-  }[];
-  shippingAddress: ShippingAddress;
+  items: { variantId: string; quantity: number }[];
+  addressId?: string;
+  shippingAddress?: ShippingAddress;
 };
 
 export type OrdersResponse = {

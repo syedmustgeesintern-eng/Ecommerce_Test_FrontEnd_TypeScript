@@ -260,7 +260,7 @@ class ApiClient {
         return this.client.put(endpoint, data, { headers });
     }
     // Example PATCH request
-    async patch(endpoint: string, data?: string, headers?: Record<string, string>) {
+    async patch(endpoint: string, data?: unknown, headers?: Record<string, string>) {
         return this.client.patch(endpoint, data, { headers });
     }
 }

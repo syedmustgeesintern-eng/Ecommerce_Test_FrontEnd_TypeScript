@@ -3,7 +3,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { notify } from "@/components/ui/notify";
 import { signInSchema } from "@/validation/signInSchema";
@@ -12,6 +12,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { getMe } from "@/store/features/user";
 export default function SignIn() {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useAppDispatch();
 
   const { loading } = useAppSelector((state) => state.auth);
@@ -27,9 +28,14 @@ export default function SignIn() {
   const onSubmit = async (data: any) => {
     try {
       const res = await dispatch(login(data)).unwrap();
-      await dispatch(getMe());
+      const user = await dispatch(getMe()).unwrap();
       notify(res?.message || "Login successful", "success");
-      navigate("/dashboard");
+      const from = (location.state as { from?: string })?.from;
+      if (from) {
+        navigate(from, { replace: true });
+      } else {
+        navigate(user.role === "CUSTOMER" ? "/products" : "/dashboard", { replace: true });
+      }
     } catch (error: any) {
       notify(error?.errorMessage || "Login failed", "error");
     }
